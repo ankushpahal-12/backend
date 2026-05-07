@@ -48,7 +48,7 @@ const config = {
     viteApiUrl: process.env.VITE_API_URL || 'http://localhost:5000',
     allowedOrigins: parseCsv(process.env.ALLOWED_ORIGINS, ['http://localhost:5173', 'http://localhost:3000']),
     allowedHosts: parseCsv(process.env.ALLOWED_HOSTS, ['localhost:5000', 'localhost:5173', 'localhost']),
-    trustedProxies: parseCsv(process.env.TRUSTED_PROXIES, ['127.0.0.1', 'localhost', '::1']),
+    trustedProxies: parseCsv(process.env.TRUSTED_PROXIES, ['127.0.0.1', 'localhost', '::1', '10.*', '172.*', '100.*']),
     cookieDomain: process.env.COOKIE_DOMAIN,
     cookieSameSite: process.env.COOKIE_SAMESITE || (env === 'production' ? 'none' : 'lax'),
     signature: {
