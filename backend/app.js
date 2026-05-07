@@ -50,9 +50,9 @@ const app = express();
 // Trust first proxy ONLY in production (behind a real load balancer/reverse proxy)
 // In dev, this would allow IP spoofing via X-Forwarded-For header
 if (config.env === 'production') {
-    // Explicitly trust only the proxies defined in TRUSTED_PROXIES (.env)
-    // This strictly prevents IP spoofing via X-Forwarded-For if an attacker bypasses the load balancer
-    app.set('trust proxy', config.trustedProxies);
+    // Trust 1 proxy hop (Render's load balancer) so req.ip returns the real client IP.
+    // Actual proxy chain security is enforced by validateProxyHeaders middleware below.
+    app.set('trust proxy', 1);
 } else {
     app.set('trust proxy', false);
 }
