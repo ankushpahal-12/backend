@@ -24,6 +24,8 @@ if (config.email.user && config.email.pass && config.email.host) {
     transporter = nodemailer.createTransport({
         host: config.email.host,
         port: config.email.port,
+        secure: Number(config.email.port) === 465, // true for 465, false for 587
+        family: 4, // Force IPv4 — Render free tier does not support IPv6 outbound
         auth: {
             user: config.email.user,
             pass: config.email.pass,
