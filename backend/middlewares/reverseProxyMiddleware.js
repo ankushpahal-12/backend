@@ -58,18 +58,19 @@ export const validateProxyHeaders = (req, res, next) => {
     const xForwardedFor = req.get('x-forwarded-for');
     if (xForwardedFor) {
         const ips = xForwardedFor.split(',').map(ip => ip.trim());
-        
-        // In production, should be exactly 1 IP (from trusted proxy)
-        if (config.env === 'production' && ips.length > 1) {
-            console.warn('[SECURITY] Proxy chain detected:', xForwardedFor);
-            return next(new AppError('Invalid proxy chain', 400));
-        }
-
-        // In production, validate the direct peer is a trusted proxy/LB
         const remoteAddress = req.socket?.remoteAddress || '';
+
+        // In production, validate the direct peer is a trusted proxy/LB FIRST
+        // Cloud platforms like Render use multi-hop proxies (multiple IPs is expected)
         if (config.env === 'production' && !isTrustedProxy(remoteAddress)) {
             console.warn('[SECURITY] Untrusted proxy peer IP:', remoteAddress);
             return next(new AppError('Untrusted proxy', 403));
+        }
+
+        // Block only suspiciously excessive chains (>3 hops) even from trusted peers
+        if (config.env === 'production' && ips.length > 3) {
+            console.warn('[SECURITY] Excessive proxy chain detected:', xForwardedFor);
+            return next(new AppError('Invalid proxy chain', 400));
         }
 
         // First forwarded address should look like a client IP
