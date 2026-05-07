@@ -1,0 +1,21 @@
+#root {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  text-align: left;
+  min-height: 100vh;
+  background: var(--color-bg-base);
+  background-image: var(--gradient-mesh);
+}
+
+/* Slide In Down Animation */
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

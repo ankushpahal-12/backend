@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finotive AI | Neural Asset Management</title>
+  <meta name="description"
+    content="Pioneering the next era of personal and organizational wealth management through neural intelligence and high-fidelity interfaces." />
+  <meta name="theme-color" content="#10b981" />
+  <!-- ── Security Headers (meta-level fallbacks; real headers served by backend) ── -->
+  <!-- NOTE: X-Frame-Options cannot be set via meta — backend helmet sets it as HTTP header -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()" />
+  
+  <!-- CSRF Token meta tag -->
+  <meta name="csrf-token" content="">
+
+  <script src="/security.js"></script>
+  <script src="/advanced-protection.js"></script>
+  <!-- Zero Trust client - MUST load BEFORE React bundle for device fingerprinting -->
+  <script src="/zero-trust-client.js"></script>
+  
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator && (location.hostname === 'localhost' || location.protocol === 'https:')) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js').catch(err => {
+          console.log('[SW] Registration failed:', err);
+        });
+      });
+    }
+  </script>
+
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>

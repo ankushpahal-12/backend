@@ -1,0 +1,391 @@
+{
+    "hero": {
+        "insights": [
+            "Predictive Alpha: +14.2% yield optimization identified.",
+            "Neural Shield: 12 attempted breaches neutralized in 24ms.",
+            "System Pulse: Global liquidity nodes at 100% capacity.",
+            "Risk Vector: Potential volatility detected in EUR/USD pair."
+        ],
+        "showcase": [
+            {
+                "id": "01",
+                "title": "Neural Analytics Engine",
+                "image": "showcase-1.png",
+                "description": "Advanced sub-second visual processing and neural data interpretation for the modern wealth master."
+            },
+            {
+                "id": "02",
+                "title": "Predictive Wealth Modeler",
+                "image": "showcase-2.png",
+                "description": "Advanced sub-second visual processing and neural data interpretation for the modern wealth master."
+            },
+            {
+                "id": "03",
+                "title": "Global Liquidity Shield",
+                "image": "showcase-3.png",
+                "description": "Advanced sub-second visual processing and neural data interpretation for the modern wealth master."
+            },
+            {
+                "id": "04",
+                "title": "Quantum Trade Terminal",
+                "image": "showcase-4.png",
+                "description": "Advanced sub-second visual processing and neural data interpretation for the modern wealth master."
+            },
+            {
+                "id": "05",
+                "title": "AI Asset Optimizer",
+                "image": "showcase-5.png",
+                "description": "Advanced sub-second visual processing and neural data interpretation for the modern wealth master."
+            }
+        ],
+        "stats": [
+            {
+                "label": "Neural Ops / Sec",
+                "value": "48.2k",
+                "detail": "+12% system load",
+                "icon": "Zap"
+            },
+            {
+                "label": "Assets Secured",
+                "value": "$12.4B+",
+                "detail": "Layer-1 Encrypted",
+                "icon": "ShieldCheck"
+            },
+            {
+                "label": "Active Entities",
+                "value": "185k+",
+                "detail": "Global Network",
+                "icon": "Globe"
+            },
+            {
+                "label": "Predictive Accuracy",
+                "value": "99.9%",
+                "detail": "AI Confidence",
+                "icon": "Sparkles"
+            }
+        ]
+    },
+    "features": [
+        {
+            "title": "Real-Time Tracking",
+            "desc": "View USD, EUR, and GBP balances instantly with live updates across all connected accounts. Our neural engine ensures sub-second latency.",
+            "icon": "BarChart3",
+            "highlighted": false,
+            "gridSpan": "md:col-span-1"
+        },
+        {
+            "title": "Advanced Analytics",
+            "desc": "Deep dive into your spending habits with AI-powered trend detection. Visualize your financial future with predictive modeling.",
+            "icon": "LayoutDashboard",
+            "highlighted": true,
+            "gridSpan": "md:col-span-2"
+        },
+        {
+            "title": "Cashflow Insights",
+            "desc": "Understand exactly where your money goes. Smart alerts identify optimization opportunities automatically.",
+            "icon": "RefreshCcw",
+            "highlighted": false,
+            "gridSpan": "md:col-span-1"
+        },
+        {
+            "title": "Global Security",
+            "desc": "Military-grade encryption for all your transactions. We prioritize your privacy with zero-knowledge architecture.",
+            "icon": "Layers",
+            "highlighted": false,
+            "gridSpan": "md:col-span-2"
+        }
+    ],
+    "process": [
+        {
+            "number": "01",
+            "title": "Create Account",
+            "desc": "Secure onboarding with biometric-ready identification systems.",
+            "icon": "UserPlus",
+            "color": "from-emerald-500/20 to-emerald-600/5"
+        },
+        {
+            "number": "02",
+            "title": "Connect Data",
+            "desc": "Bank-grade API integration with zero-knowledge data architecture.",
+            "icon": "Link",
+            "color": "from-blue-500/20 to-blue-600/5"
+        },
+        {
+            "number": "03",
+            "title": "AI Optimization",
+            "desc": "Our neural engine scans 1,000+ data points for instant optimization.",
+            "icon": "Cpu",
+            "color": "from-purple-500/20 to-purple-600/5"
+        },
+        {
+            "number": "04",
+            "title": "See Results",
+            "desc": "Visualize your wealth accelerating with real-time feedback loops.",
+            "icon": "Rocket",
+            "color": "from-orange-500/20 to-orange-600/5"
+        }
+    ],
+    "navbar": {
+        "brand": "Finotive",
+        "items": [
+            {
+                "name": "Home",
+                "href": "/"
+            },
+            {
+                "name": "Platform",
+                "href": "#platform"
+            },
+            {
+                "name": "Solutions",
+                "href": "#solutions"
+            },
+            {
+                "name": "Pricing",
+                "href": "#pricing"
+            },
+            {
+                "name": "Contact",
+                "href": "/contact"
+            }
+        ]
+    },
+    "testimonials": [
+        {
+            "name": "Alex Rivira",
+            "role": "Chief Investment Officer",
+            "quote": "Finotive's neural engine identified 14% waste in our operational liquidity within the first week. It's not just a tool; it's a strategic asset.",
+            "avatar": "avatar-1.png"
+        },
+        {
+            "name": "Sarah Chen",
+            "role": "Wealth Master, Private Sector",
+            "quote": "The predictive modeling is frighteningly accurate. I finally feel in control of my financial trajectory across all global nodes.",
+            "avatar": "avatar-2.png"
+        },
+        {
+            "name": "Marcus Thorne",
+            "role": "System Architect",
+            "quote": "Zero-knowledge encryption paired with this level of UI sophistication is unheard of. Finotive is the new gold standard for asset management.",
+            "avatar": "avatar-3.png"
+        }
+    ],
+    "howItWorks": [
+        {
+            "title": "Quantum Integration",
+            "desc": "Securely link your global financial nodes using bank-grade 256-bit AES encryption protocols."
+        },
+        {
+            "title": "Neural Processing",
+            "desc": "Our proprietary AI models analyze cross-temporal data points to identify optimization vectors."
+        },
+        {
+            "title": "Predictive Mastery",
+            "desc": "Receive real-time insights and automated wealth acceleration strategies tailored to your lifestyle."
+        }
+    ],
+    "comparison": [
+        {
+            "feature": "Data Sovereignty",
+            "legacy": "Bank-owned / Centralized",
+            "finotive": "Zero-Knowledge / User-owned",
+            "icon": "Shield"
+        },
+        {
+            "feature": "Processing Latency",
+            "legacy": "24-48 Business Hours",
+            "finotive": "Sub-24ms Neural Sync",
+            "icon": "Zap"
+        },
+        {
+            "feature": "Predictive Alpha",
+            "legacy": "Static / Retrospective",
+            "finotive": "AI-Driven / Proactive",
+            "icon": "TrendingUp"
+        },
+        {
+            "feature": "Global Accessibility",
+            "legacy": "Region-locked / Fragmented",
+            "finotive": "Unified Multi-Node Network",
+            "icon": "Globe"
+        }
+    ],
+    "faq": [
+        {
+            "question": "How secure is my financial data?",
+            "answer": "We utilize Layer-1 AES-256 encryption with a zero-knowledge architecture. This means even our systems cannot decrypt your raw transaction data; only your private key holds the access."
+        },
+        {
+            "question": "Can I connect multiple international banks?",
+            "answer": "Yes. Finotive supports 5,000+ global financial institutions across 40 countries, providing a unified neural dashboard for your entire net worth."
+        },
+        {
+            "question": "How does the AI predict my future expenses?",
+            "answer": "Our neural engine uses recurrent models to identify seasonal patterns, subscription decays, and discretionary spending vectors with 99.9% historical accuracy."
+        },
+        {
+            "question": "Is there a mobile application available?",
+            "answer": "The Finotive terminal is a Progressive Web App (PWA) optimized for all mobile nodes, ensuring high-fidelity performance on any device without a separate download."
+        }
+    ],
+    "footer": {
+        "sections": [
+            {
+                "title": "Protocol",
+                "links": [
+                    {
+                        "name": "Neural Dashboard",
+                        "href": "/user/dashboard"
+                    },
+                    {
+                        "name": "Asset Tracking",
+                        "href": "/user/expenses"
+                    },
+                    {
+                        "name": "Revenue Nodes",
+                        "href": "/user/income"
+                    },
+                    {
+                        "name": "Budget Matrices",
+                        "href": "/user/budget"
+                    },
+                    {
+                        "name": "Quantum Reports",
+                        "href": "/user/reports"
+                    }
+                ]
+            },
+            {
+                "title": "Intelligence",
+                "links": [
+                    {
+                        "name": "Documentation",
+                        "href": "#"
+                    },
+                    {
+                        "name": "API Matrix",
+                        "href": "#"
+                    },
+                    {
+                        "name": "System Status",
+                        "href": "#"
+                    },
+                    {
+                        "name": "Security Whitepaper",
+                        "href": "#"
+                    }
+                ]
+            },
+            {
+                "title": "Governance",
+                "links": [
+                    {
+                        "name": "Privacy Policy",
+                        "href": "/privacy-policy"
+                    },
+                    {
+                        "name": "Terms of Service",
+                        "href": "/terms-of-service"
+                    },
+                    {
+                        "name": "GDPR Compliance",
+                        "href": "#"
+                    },
+                    {
+                        "name": "Cookies Audit",
+                        "href": "#"
+                    }
+                ]
+            },
+            {
+                "title": "Network",
+                "links": [
+                    {
+                        "name": "About Finotive",
+                        "href": "#"
+                    },
+                    {
+                        "name": "Neural Careers",
+                        "href": "#"
+                    },
+                    {
+                        "name": "Global News",
+                        "href": "#"
+                    },
+                    {
+                        "name": "Contact Portal",
+                        "href": "/contact"
+                    }
+                ]
+            }
+        ],
+        "socials": [
+            {
+                "icon": "Twitter",
+                "href": "https://twitter.com/finotive"
+            },
+            {
+                "icon": "Github",
+                "href": "https://github.com/finotive"
+            },
+            {
+                "icon": "Linkedin",
+                "href": "https://linkedin.com/company/finotive"
+            },
+            {
+                "icon": "Mail",
+                "href": "mailto:protocol@finotive.ai"
+            }
+        ]
+    },
+    "pricing": {
+        "title": "Protocol Access Tiers",
+        "description": "Select your operational level within the Finotive neural network.",
+        "tiers": [
+            {
+                "name": "Core Node",
+                "price": "0",
+                "billing": "Forever",
+                "description": "Essential tracking for individual wealth nodes.",
+                "features": [
+                    "Real-time expense tracking",
+                    "Basic AI categorization",
+                    "3 bank connections",
+                    "Standard security protocols"
+                ],
+                "buttonText": "Engage Core",
+                "highlighted": false
+            },
+            {
+                "name": "Pro Terminal",
+                "price": "19",
+                "billing": "per month",
+                "description": "Advanced predictive analytics for serious wealth masters.",
+                "features": [
+                    "Unlimited bank integrations",
+                    "Predictive AI modeling",
+                    "Global wealth sync",
+                    "Priority neural updates",
+                    "Advanced tax vectoring"
+                ],
+                "buttonText": "Upgrade to Pro",
+                "highlighted": true
+            },
+            {
+                "name": "Elite Matrix",
+                "price": "49",
+                "billing": "per month",
+                "description": "Full-spectrum intelligence for high-net-worth entities.",
+                "features": [
+                    "Quantum wealth protection",
+                    "Direct wealth advisor API",
+                    "Multi-entity management",
+                    "Zero-latency global sync",
+                    "Bespoke neural training"
+                ],
+                "buttonText": "Initialize Elite",
+                "highlighted": false
+            }
+        ]
+    }
+}

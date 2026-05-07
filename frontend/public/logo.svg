@@ -1,0 +1,29 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="emeraldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="15" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Rounded Square Background -->
+  <rect x="64" y="64" width="384" height="384" rx="80" fill="url(#emeraldGradient)" filter="url(#glow)" />
+  
+  <!-- Central Neural Node / Diamond -->
+  <path d="M256 160L336 256L256 352L176 256L256 160Z" fill="white" />
+  
+  <!-- Subtle Connectivity Lines -->
+  <circle cx="256" cy="120" r="12" fill="white" fill-opacity="0.5" />
+  <circle cx="256" cy="392" r="12" fill="white" fill-opacity="0.5" />
+  <circle cx="120" cy="256" r="12" fill="white" fill-opacity="0.5" />
+  <circle cx="392" cy="256" r="12" fill="white" fill-opacity="0.5" />
+  
+  <rect x="254" y="132" width="4" height="28" fill="white" fill-opacity="0.3" />
+  <rect x="254" y="352" width="4" height="28" fill="white" fill-opacity="0.3" />
+  <rect x="132" y="254" width="28" height="4" fill="white" fill-opacity="0.3" />
+  <rect x="352" y="254" width="28" height="4" fill="white" fill-opacity="0.3" />
+</svg>
