@@ -49,7 +49,8 @@ export const validateProxyHeaders = (req, res, next) => {
 
     // 2. Validate X-Forwarded-Proto (should be https in production)
     const proto = req.get('x-forwarded-proto');
-    if (config.env === 'production' && proto !== 'https') {
+    const isInternalHealthCheck = req.socket?.remoteAddress === '127.0.0.1' || req.socket?.remoteAddress === '::1';
+    if (config.env === 'production' && !isInternalHealthCheck && proto !== 'https') {
         console.warn('[SECURITY] Non-HTTPS X-Forwarded-Proto:', proto);
         return next(new AppError('HTTPS required', 403));
     }
