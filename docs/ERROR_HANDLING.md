@@ -6,6 +6,75 @@ The platform implements a comprehensive, multi-layered error handling system tha
 
 ---
 
+## Error Handling Flow Diagram
+
+```mermaid
+graph TD
+    Start["❌ Error Occurrence<br/>Try/Catch Block"]
+    Start --> CatchError{"Error Type?"}
+
+    CatchError -->|Validation Error| E400["400 Bad Request<br/>VALIDATION_ERROR<br/>User Input Invalid"]
+    CatchError -->|Auth Missing/Expired| E401["401 Unauthorized<br/>UNAUTHORIZED<br/>TOKEN_EXPIRED"]
+    CatchError -->|Permission Denied| E403["403 Forbidden<br/>FORBIDDEN<br/>INSUFFICIENT_PRIVILEGE"]
+    CatchError -->|Resource Missing| E404["404 Not Found<br/>NOT_FOUND<br/>RESOURCE_NOT_FOUND"]
+    CatchError -->|Conflict/Duplicate| E409["409 Conflict<br/>CONFLICT<br/>DUPLICATE_ENTRY"]
+    CatchError -->|Rate Limited| E429["429 Too Many<br/>RATE_LIMITED<br/>QUOTA_EXCEEDED"]
+    CatchError -->|Server Error| E500["500 Server Error<br/>INTERNAL_ERROR<br/>UNEXPECTED_ERROR"]
+    CatchError -->|Service Unavailable| E503["503 Unavailable<br/>SERVICE_UNAVAILABLE<br/>MAINTENANCE_MODE"]
+
+    E400 --> EnrichError["📋 Enrich Error Data<br/>Status Code<br/>Error Code<br/>Message<br/>Details<br/>Timestamp<br/>Request ID"]
+    E401 --> EnrichError
+    E403 --> EnrichError
+    E404 --> EnrichError
+    E409 --> EnrichError
+    E429 --> EnrichError
+    E500 --> EnrichError
+    E503 --> EnrichError
+
+    EnrichError --> LogError["📝 Log Error<br/>Audit Logger<br/>- Timestamp<br/>- Request ID<br/>- User ID<br/>- IP Address<br/>- Stack Trace<br/>- Context Data"]
+    LogError --> Decision{"Error Severity?"}
+
+    Decision -->|Low| QuietFail["🟢 Low Severity<br/>Log Only<br/>No Alert"]
+    Decision -->|Medium| AlertOnce["🟡 Medium Severity<br/>Log + Alert<br/>Dashboard Notification"]
+    Decision -->|High| AlertUrgent["🔴 High Severity<br/>Log + Alert<br/>Sentry Report<br/>PagerDuty Notify"]
+
+    QuietFail --> Format["🎯 Format Error Response"]
+    AlertOnce --> Format
+    AlertUrgent --> Format
+
+    Format --> SecCheck{"Include Details?"}
+    SecCheck -->|Dev Environment| FullDetails["Full Stack Trace<br/>Database Query<br/>Full Error Message<br/>Code Context"]
+    SecCheck -->|Prod Environment| SafeDetails["Safe Generic Message<br/>Hide Implementation<br/>Show Error Code<br/>Request ID"]
+
+    FullDetails --> ResponseBody["📤 Error Response Body<br/>status: HTTP Status<br/>code: Error Code<br/>message: User Message<br/>details: Field Errors<br/>requestId: Unique ID<br/>timestamp: ISO 8601<br/>retry_after?: Retry Info"]
+    SafeDetails --> ResponseBody
+
+    ResponseBody --> SendResponse["🔄 Send HTTP Response<br/>Set Status Code<br/>Set Headers<br/>JSON Body<br/>Retry-After Header"]
+    SendResponse --> Monitor["📊 Monitor & Track<br/>Sentry Tracking<br/>Error Rate Metric<br/>Alert if Spike<br/>Analytics"]
+    Monitor --> End["✅ Client Receives Error<br/>with Proper Context"]
+
+    %% Recovery paths
+    ResponseBody -->|Retriable Error| Retry["🔁 Recovery Strategy<br/>Exponential Backoff<br/>Circuit Breaker<br/>Fallback Service"]
+    Retry --> End
+
+    %% Styling
+    classDef errorType fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
+    classDef logging fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    classDef decision fill:#fffde7,stroke:#f57f17,stroke-width:2px,color:#000
+    classDef formatting fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px,color:#000
+    classDef response fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000
+    classDef monitoring fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
+
+    class E400,E401,E403,E404,E409,E429,E500,E503 errorType
+    class LogError,Monitor logging
+    class CatchError,Decision,SecCheck,Retry decision
+    class EnrichError,Format,ResponseBody formatting
+    class SendResponse,End response
+    class Start,QuietFail,AlertOnce,AlertUrgent monitoring
+```
+
+---
+
 ## Error Categories
 
 ### 1. **Validation Errors** (HTTP 400)
