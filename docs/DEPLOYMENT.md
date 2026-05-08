@@ -9,6 +9,97 @@ The Online Assessment Platform supports multiple deployment environments:
 
 ---
 
+## Deployment Topology Diagram
+
+```mermaid
+graph TB
+    subgraph Dev["🖥️ Local Development"]
+        Git["Git Repository<br/>Source Code"]
+        Docker["Docker Compose<br/>Orchestration"]
+        subgraph DevContainers["Containers"]
+            DevFront["Frontend<br/>React Dev Server<br/>Port 5173"]
+            DevBack["Backend<br/>Express.js<br/>Port 8000"]
+            DevMongo["MongoDB<br/>Local Instance<br/>Port 27017"]
+            DevRedis["Redis<br/>Cache<br/>Port 6379"]
+        end
+        DevNginx["Nginx Dev<br/>Port 80/443"]
+    end
+
+    subgraph Staging["🌥️ Staging Environment - Render"]
+        StagingGit["GitHub Repository<br/>Webhook Trigger"]
+        StagingPipeline["CI/CD Pipeline<br/>GitHub Actions"]
+        StagingTests["Automated Tests<br/>Security Scan"]
+        subgraph StagingServices["Render Services"]
+            StagingFront["Frontend Service<br/>Static Web App<br/>React Build"]
+            StagingBack["Backend Service<br/>Web Service<br/>Node.js"]
+            StagingDB["Render PostgreSQL<br/>or MongoDB Atlas<br/>Staging DB"]
+        end
+        StagingNginx["Nginx Proxy<br/>TLS/SSL<br/>Domain: staging.example.com"]
+    end
+
+    subgraph Prod["🚀 Production Environment - Render HA"]
+        ProdGit["GitHub Repository<br/>Release Tag"]
+        ProdPipeline["CI/CD Pipeline<br/>GitHub Actions"]
+        ProdApproval["Manual Approval<br/>Production Deploy"]
+        subgraph ProdServices["Render Services HA"]
+            ProdFront1["Frontend Service 1<br/>React Build<br/>Auto-Scaling"]
+            ProdFront2["Frontend Service 2<br/>React Build<br/>Auto-Scaling"]
+            ProdBack1["Backend Service 1<br/>Node.js<br/>Auto-Scaling"]
+            ProdBack2["Backend Service 2<br/>Node.js<br/>Auto-Scaling"]
+            ProdBack3["Backend Service 3<br/>Node.js<br/>Auto-Scaling"]
+            ProdDB["MongoDB Atlas<br/>Replica Set<br/>Production DB<br/>Sharded"]
+            ProdRedis["Redis Cloud<br/>Cluster<br/>High Availability"]
+        end
+        ProdNginx["Nginx Load Balancer<br/>TLS/SSL<br/>Domain: app.example.com<br/>CDN: CloudFlare"]
+        ProdMonitor["Monitoring & Alerts<br/>Sentry<br/>DataDog<br/>PagerDuty"]
+    end
+
+    subgraph Backup["💾 Backup & Disaster Recovery"]
+        BackupDB["MongoDB Backup<br/>Daily Full Backups<br/>Automated"]
+        BackupGeo["Geographic Redundancy<br/>Multi-region Backup<br/>RTO: 1hr<br/>RPO: 15min"]
+    end
+
+    %% Development Flow
+    Git -->|Dev Branch| Docker
+    Docker --> DevContainers
+    DevContainers --> DevNginx
+    DevNginx -->|http://localhost| Dev
+
+    %% Staging Flow
+    StagingGit -->|Webhook| StagingPipeline
+    StagingPipeline --> StagingTests
+    StagingTests -->|Success| StagingServices
+    StagingServices --> StagingNginx
+    StagingNginx -->|HTTPS| Staging
+
+    %% Production Flow
+    ProdGit -->|Tag Push| ProdPipeline
+    ProdPipeline --> ProdApproval
+    ProdApproval -->|Approved| ProdServices
+    ProdServices --> ProdNginx
+    ProdNginx -->|HTTPS| Prod
+    ProdServices -->|Logs & Metrics| ProdMonitor
+
+    %% Backup
+    ProdDB -->|Sync| BackupDB
+    BackupDB -->|Replicate| BackupGeo
+
+    %% Styling
+    classDef dev fill:#e3f2fd,stroke:#1565c0,color:#000
+    classDef staging fill:#f3e5f5,stroke:#6a1b9a,color:#000
+    classDef prod fill:#e8f5e9,stroke:#1b5e20,color:#000
+    classDef backup fill:#fff3e0,stroke:#e65100,color:#000
+    classDef process fill:#fce4ec,stroke:#880e4f,color:#000
+
+    class Dev dev
+    class Staging staging
+    class Prod prod
+    class Backup backup
+    class StagingPipeline,ProdPipeline,ProdApproval,StagingTests process
+```
+
+---
+
 ## Pre-Deployment Checklist
 
 Before any deployment, verify:
