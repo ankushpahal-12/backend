@@ -6,6 +6,122 @@ The platform implements a comprehensive, defense-in-depth security model. Securi
 
 ---
 
+## Security Architecture Diagram
+
+```mermaid
+graph TB
+    subgraph Perimeter["🔒 Perimeter Security"]
+        DDoS["DDoS Protection<br/>Rate Limiting<br/>Traffic Filtering"]
+        WAF["Web Application Firewall<br/>Pattern Detection<br/>Payload Analysis"]
+        IPFilter["IP Blacklist/Whitelist<br/>Geofencing<br/>Spoofing Detection"]
+    end
+
+    subgraph Auth["🔐 Authentication Layer"]
+        subgraph AuthMethods["Authentication Methods"]
+            Password["Email & Password<br/>bcryptjs Hash<br/>Salt Rounds: 12"]
+            MFA["Multi-Factor Auth<br/>TOTP RFC 6238<br/>Email OTP<br/>Backup Codes"]
+            OAuth["OAuth 2.0<br/>Google Social Login<br/>Account Linking"]
+        end
+        TokenGen["Token Generation<br/>JWT Access Token<br/>Refresh Token<br/>Session Creation"]
+    end
+
+    subgraph AuthZ["🛡️ Authorization Layer"]
+        RoleCheck["Role-Based Access<br/>Admin<br/>User<br/>Guest"]
+        PermCheck["Permission Validation<br/>Resource Ownership<br/>Subscription Tier<br/>API Key Scope"]
+        CSRFToken["CSRF Token<br/>Validation<br/>Per-Request Tokens"]
+    end
+
+    subgraph Trust["📊 Zero Trust Architecture"]
+        DeviceScore["Device Score 30%<br/>Device Fingerprint<br/>OS/Browser Check<br/>TLS Cert Validation"]
+        BehaviorScore["Behavior Score 30%<br/>User Activity<br/>Login Patterns<br/>Anomaly Detection"]
+        IPScore["IP Score 20%<br/>IP Reputation<br/>Geolocation<br/>VPN Detection"]
+        GeoScore["Geographic Score 20%<br/>Unexpected Locations<br/>Impossible Travel<br/>Time Zone Check"]
+        TrustCalc["Trust Score Calculator<br/>Aggregate Score<br/>Threshold Check<br/>Challenge Decision"]
+    end
+
+    subgraph Detection["🚨 Threat Detection"]
+        BotDetect["Bot Detection<br/>User-Agent Check<br/>Behavior Analysis<br/>Captcha Challenge"]
+        BruteForce["Brute Force Protection<br/>Failed Attempt Tracking<br/>Exponential Backoff<br/>Account Lockout"]
+        ReplayAttack["Replay Attack Prevention<br/>Timestamp Validation<br/>Nonce Tracking<br/>HMAC Signature"]
+        Spoofing["IP Spoofing Detection<br/>Header Validation<br/>X-Forwarded-For Check<br/>Reverse Lookup"]
+    end
+
+    subgraph DataProtection["🔒 Data Protection"]
+        Encryption["Encryption at Rest<br/>MongoDB Encryption<br/>Field-level Encryption<br/>AES-256-CBC"]
+        Transit["Encryption in Transit<br/>TLS 1.3<br/>HTTPS/WSS<br/>Certificate Pinning"]
+        Hash["Hashing & Signing<br/>HMAC-SHA256<br/>bcryptjs<br/>Digital Signatures"]
+    end
+
+    subgraph Response["🚨 Incident Response"]
+        Audit["Audit Logging<br/>All Security Events<br/>User Actions<br/>API Calls<br/>Timestamp & Context"]
+        Alert["Real-time Alerts<br/>Suspicious Activity<br/>Threshold Triggers<br/>Admin Notification"]
+        Escalate["Incident Escalation<br/>Manual Review<br/>Automatic Lockdown<br/>Contact User"]
+    end
+
+    subgraph Compliance["📋 Compliance & Standards"]
+        Standards["Security Standards<br/>OWASP Top 10<br/>CWE Best Practices<br/>NIST Guidance"]
+        Privacy["Privacy Protection<br/>GDPR Compliance<br/>Data Retention<br/>User Consent"]
+        Audit_Trail["Audit Trail<br/>Forensic Logs<br/>Change Tracking<br/>Immutable Records"]
+    end
+
+    %% Connection flows
+    DDoS --> Auth
+    WAF --> Auth
+    IPFilter --> Auth
+
+    Password --> TokenGen
+    MFA --> TokenGen
+    OAuth --> TokenGen
+
+    TokenGen --> RoleCheck
+    RoleCheck --> PermCheck
+    PermCheck --> CSRFToken
+    CSRFToken --> Trust
+
+    DeviceScore --> TrustCalc
+    BehaviorScore --> TrustCalc
+    IPScore --> TrustCalc
+    GeoScore --> TrustCalc
+
+    TrustCalc -->|Challenge if Low Score| Detection
+    BotDetect --> DataProtection
+    BruteForce --> DataProtection
+    ReplayAttack --> DataProtection
+    Spoofing --> DataProtection
+
+    Encryption --> Response
+    Transit --> Response
+    Hash --> Response
+
+    Audit --> Compliance
+    Alert --> Compliance
+    Escalate --> Compliance
+
+    Standards --> Audit_Trail
+    Privacy --> Audit_Trail
+
+    %% Styling
+    classDef perimeter fill:#ffebee,stroke:#c62828,color:#000
+    classDef auth fill:#e3f2fd,stroke:#1565c0,color:#000
+    classDef authz fill:#f3e5f5,stroke:#6a1b9a,color:#000
+    classDef trust fill:#e8f5e9,stroke:#1b5e20,color:#000
+    classDef detection fill:#fff3e0,stroke:#e65100,color:#000
+    classDef protect fill:#fce4ec,stroke:#880e4f,color:#000
+    classDef response fill:#e0f2f1,stroke:#004d40,color:#000
+    classDef compliance fill:#f1f8e9,stroke:#33691e,color:#000
+
+    class Perimeter perimeter
+    class Auth,AuthMethods,TokenGen auth
+    class AuthZ authz
+    class Trust trust
+    class Detection detection
+    class DataProtection protect
+    class Response response
+    class Compliance compliance
+```
+
+---
+
 ## Security Pillars
 
 ### 1. **Authentication**
