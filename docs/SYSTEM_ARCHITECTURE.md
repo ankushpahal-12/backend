@@ -6,79 +6,212 @@ The Online Assessment and Test Management Platform follows a modern, layered arc
 
 ---
 
-## Architecture Diagram
+## Architecture Diagram (Mermaid)
 
-```
-                          CLIENT LAYER
-                         (Port 3000)
-                              |
-                              |
-                         Nginx Proxy
-                    (Reverse Proxy & Load Balancer)
-                    - TLS/SSL Termination
-                    - WebSocket Upgrade
-                    - Request Routing
-                              |
-                 _____________|_____________
-                |                           |
-         HTTP/REST API                 WebSocket Channel
-         (Port 8000)                   (Real-time Events)
-                |                           |
-        ________|_________          ________|________
-       |                  |        |                 |
-   Express.js        Socket.IO    Socket.IO      Logging
-   HTTP Server       Real-time    Handler        Middleware
-                     Events                           |
-       |                                          Event
-  _____|_________                                 Emission
- |               |
-API Routes      Controllers
-- /api/auth     - authController
-- /api/admin    - adminController
-- /api/users    - userController
-- /api/tests    - testController
-- /api/sessions - sessionController
-- /api/tokens   - tokenController
-- /api/2fa      - twoFactorController
-- /api/privacy  - dataPrivacyController
-- /api/trust    - zeroTrustController
+```mermaid
+graph TB
+    subgraph Client["🖥️ Client Layer - React Application"]
+        React["React 18+ with TypeScript<br/>(Port 5173)"]
+        UI["Components<br/>Pages<br/>Hooks"]
+        State["State Management<br/>Context API<br/>Custom Hooks"]
+        HTTP_Client["Axios HTTP Client"]
+        WS_Client["Socket.IO Client<br/>Real-time Events"]
+    end
 
-            |
-    ________|_______
-   |                |
-Middlewares      Logging
-- Auth             Middleware
-- CSRF             - Morgan (HTTP)
-- Zero Trust       - Audit Logger
-- IP Blacklist     - Security
-- Bot Detection    - Events
-- WAF
-- DDoS Protection
-- Rate Limiting
-- Input Validation
-- CSP Nonce
-- Signature
-- Replay Attack
-- IP Spoofing
-- Auto Logout
-- Reverse Proxy
-- API Version
-- Error Handler
-- CORS
+    subgraph Network["🌐 Network & Proxy Layer"]
+        Nginx["Nginx 1.27 Alpine<br/>Reverse Proxy & Load Balancer<br/>(Port 80/443)"]
+        TLS["TLS/SSL Termination<br/>Certificate Management"]
+        Router["Request Routing<br/>WebSocket Upgrade<br/>Response Compression"]
+    end
 
-            |
-    ________|________
-   |                 |
-Database         External Services
-MongoDB          - Email Service
-- Users          - OAuth Providers
-- Sessions       - Web3 Providers
-- Tests          - Payment Gateways
-- Responses
-- Audit Logs
-- IP Blacklist
-- Device Stores
-- Behavior Stores
+    subgraph API["📡 API Layer - Express.js"]
+        HTTPServer["Express.js HTTP Server<br/>(Port 8000)"]
+        WS["Socket.IO<br/>Real-time Channel"]
+        
+        subgraph Routes["API Routes & Endpoints"]
+            Auth["/api/auth<br/>Authentication"]
+            Users["/api/users<br/>User Management"]
+            Admin["/api/admin<br/>Admin Operations"]
+            Sessions["/api/sessions<br/>Session Management"]
+            Tokens["/api/tokens<br/>Token Operations"]
+            Security["/api/security<br/>Security Settings"]
+            Privacy["/api/privacy<br/>Data Privacy"]
+            Trust["/api/trust<br/>Zero Trust"]
+        end
+    end
+
+    subgraph Middleware["🛡️ Middleware Pipeline"]
+        M1["CORS & Logging"]
+        M2["Rate Limiting"]
+        M3["Input Validation"]
+        M4["Bot Detection"]
+        M5["IP Spoofing Detection"]
+        M6["IP Blacklist Check"]
+        M7["HMAC Signature"]
+        M8["CSRF Protection"]
+        M9["JWT Authentication"]
+        M10["Zero Trust Score"]
+        M11["Replay Attack Prevention"]
+        M12["WAF & DDoS Protection"]
+        M13["Auto Logout Check"]
+        M14["CSP Nonce Injection"]
+    end
+
+    subgraph Controllers["🎮 Business Logic Layer"]
+        AuthCtrl["authController<br/>Registration<br/>Login<br/>OAuth 2.0"]
+        UserCtrl["userController<br/>Profile Management<br/>Preferences"]
+        AdminCtrl["adminController<br/>User Management<br/>System Config"]
+        TokenCtrl["tokenController<br/>Token Refresh<br/>Token Rotation"]
+        SessionCtrl["sessionController<br/>Session Management<br/>Device Tracking"]
+        TwoFACtrl["twoFactorController<br/>TOTP<br/>Email OTP"]
+        DataCtrl["dataPrivacyController<br/>Data Export<br/>Account Deletion"]
+        ZeroCtrl["zeroTrustController<br/>Trust Scoring<br/>Threat Detection"]
+    end
+
+    subgraph Security["🔒 Security & Validation"]
+        Auth_Sys["Authentication System<br/>JWT Tokens<br/>Refresh Tokens<br/>OAuth 2.0"]
+        Trust_Sys["Zero Trust Architecture<br/>Device Score 30%<br/>Behavior 30%<br/>IP 20%<br/>Geographic 20%"]
+        Crypto["Encryption & Hashing<br/>bcryptjs<br/>HMAC-SHA256"]
+    end
+
+    subgraph Database["💾 Data Layer - MongoDB"]
+        Users_DB["Users Collection<br/>Profiles<br/>Credentials"]
+        Sessions_DB["AuthSessions<br/>Active Sessions<br/>Device Info"]
+        LoginAttempts_DB["LoginAttempts<br/>Failed Attempts"]
+        MFA_DB["MFAChallenges<br/>OTP Store"]
+        OTP_DB["EmailVerificationOTP<br/>Verification Data"]
+        IPBlacklist_DB["IPBlacklist<br/>Blocked IPs"]
+        DeviceStore_DB["DeviceStore<br/>Device Fingerprints"]
+        BehaviorStore_DB["BehaviorStore<br/>User Behavior"]
+        AuditLogs_DB["AuditLogs<br/>Security Events"]
+        ApiKeys_DB["ApiKeys<br/>API Credentials"]
+    end
+
+    subgraph External["🌍 External Services"]
+        Email["Nodemailer<br/>Email Service"]
+        OAuth["OAuth 2.0 Providers<br/>Google<br/>GitHub"]
+        Web3["Web3 Integration<br/>Smart Contracts"]
+    end
+
+    subgraph Monitoring["📊 Monitoring & Logging"]
+        Morgan["Morgan HTTP Logger<br/>Request Metrics"]
+        AuditLog["Audit Logger<br/>Security Events"]
+        ErrorHandler["Error Handler<br/>Exception Tracking"]
+        HealthCheck["Health Check Endpoint<br/>System Status"]
+    end
+
+    %% Client connections
+    React --> UI
+    UI --> State
+    State --> HTTP_Client
+    State --> WS_Client
+
+    %% Network Layer connections
+    HTTP_Client --> Nginx
+    WS_Client --> Nginx
+    Nginx --> TLS
+    Nginx --> Router
+    Router --> HTTPServer
+    Router --> WS
+
+    %% API Layer to Middleware
+    HTTPServer --> M1
+    M1 --> M2
+    M2 --> M3
+    M3 --> M4
+    M4 --> M5
+    M5 --> M6
+    M6 --> M7
+    M7 --> M8
+    M8 --> M9
+    M9 --> M10
+    M10 --> M11
+    M11 --> M12
+    M12 --> M13
+    M13 --> M14
+
+    %% Routes
+    M14 --> Auth
+    M14 --> Users
+    M14 --> Admin
+    M14 --> Sessions
+    M14 --> Tokens
+    M14 --> Security
+    M14 --> Privacy
+    M14 --> Trust
+
+    %% Routes to Controllers
+    Auth --> AuthCtrl
+    Users --> UserCtrl
+    Admin --> AdminCtrl
+    Sessions --> SessionCtrl
+    Tokens --> TokenCtrl
+    Security --> TwoFACtrl
+    Privacy --> DataCtrl
+    Trust --> ZeroCtrl
+
+    %% Security Systems
+    AuthCtrl --> Auth_Sys
+    UserCtrl --> Auth_Sys
+    ZeroCtrl --> Trust_Sys
+    AuthCtrl --> Crypto
+    ZeroCtrl --> Crypto
+
+    %% Controllers to Database
+    AuthCtrl --> Users_DB
+    AuthCtrl --> Sessions_DB
+    AuthCtrl --> LoginAttempts_DB
+    TwoFACtrl --> MFA_DB
+    AuthCtrl --> OTP_DB
+    UserCtrl --> Users_DB
+    AdminCtrl --> Users_DB
+    SessionCtrl --> Sessions_DB
+    SessionCtrl --> DeviceStore_DB
+    ZeroCtrl --> BehaviorStore_DB
+    ZeroCtrl --> IPBlacklist_DB
+
+    %% All Controllers to Audit
+    AuthCtrl --> AuditLogs_DB
+    UserCtrl --> AuditLogs_DB
+    AdminCtrl --> AuditLogs_DB
+    TokenCtrl --> AuditLogs_DB
+    TwoFACtrl --> AuditLogs_DB
+
+    %% External Services
+    AuthCtrl --> Email
+    AuthCtrl --> OAuth
+    Web3 -.->|Optional| AuthCtrl
+
+    %% Monitoring
+    HTTPServer --> Morgan
+    AuthCtrl --> AuditLog
+    AuthCtrl --> ErrorHandler
+    HTTPServer --> HealthCheck
+
+    %% WebSocket
+    WS --> AuditLog
+    WS -.->|Events| Client
+
+    %% Styling
+    classDef client fill:#e1f5ff,stroke:#01579b,color:#000
+    classDef network fill:#f3e5f5,stroke:#4a148c,color:#000
+    classDef api fill:#e8f5e9,stroke:#1b5e20,color:#000
+    classDef middleware fill:#fff3e0,stroke:#e65100,color:#000
+    classDef controller fill:#fce4ec,stroke:#880e4f,color:#000
+    classDef security fill:#f1f8e9,stroke:#33691e,color:#000
+    classDef database fill:#ede7f6,stroke:#311b92,color:#000
+    classDef external fill:#e0f2f1,stroke:#004d40,color:#000
+    classDef monitoring fill:#fbe9e7,stroke:#bf360c,color:#000
+
+    class Client client
+    class Network network
+    class API,Routes api
+    class Middleware middleware
+    class Controllers controller
+    class Security security
+    class Database database
+    class External external
+    class Monitoring monitoring
 ```
 
 ---
