@@ -6,6 +6,63 @@ Middleware functions execute in sequence for every HTTP request. They handle cro
 
 ---
 
+## Middleware Execution Flow Diagram
+
+```mermaid
+graph TD
+    Start["📥 HTTP Request Entry<br/>Nginx → Express"]
+    Start --> M1["1️⃣ CORS Middleware<br/>✓ Preflight OPTIONS<br/>✓ Origin Validation<br/>✓ Credentials Setup"]
+    M1 --> M2["2️⃣ Morgan Logger<br/>✓ Log Method & Path<br/>✓ Response Status<br/>✓ Performance Metrics"]
+    M2 --> M3["3️⃣ Body Parser<br/>✓ JSON Parse<br/>✓ URL-Encoded Parse<br/>✓ Size Limits"]
+    M3 --> M4["4️⃣ Cookie Parser<br/>✓ Extract Cookies<br/>✓ Session ID<br/>✓ CSRF Token"]
+    M4 --> M5["5️⃣ Helmet Security<br/>✓ Security Headers<br/>✓ HSTS<br/>✓ XSS Protection"]
+    M5 --> M6["6️⃣ Rate Limiting<br/>✓ Check Rate Limit<br/>✓ Increment Counter<br/>✓ Block if Exceeded"]
+    M6 --> M7["7️⃣ Input Validation<br/>✓ Schema Validation<br/>✓ Type Checking<br/>✓ Constraint Verify"]
+    M7 --> M8["8️⃣ Bot Detection<br/>✓ User-Agent Check<br/>✓ Behavior Analysis<br/>✓ Captcha if Bot"]
+    M8 --> M9["9️⃣ IP Spoofing Detection<br/>✓ Header Validation<br/>✓ X-Forwarded-For<br/>✓ Reverse Lookup"]
+    M9 --> M10["🔟 IP Blacklist Check<br/>✓ Blacklist Lookup<br/>✓ Geofence Check<br/>✓ Block if Listed"]
+    M10 --> M11["1️⃣1️⃣ Reverse Proxy<br/>✓ Proxy Validation<br/>✓ URL Rewrite<br/>✓ Trust Headers"]
+    M11 --> M12["1️⃣2️⃣ API Version Routing<br/>✓ Extract Version<br/>✓ Route to Handler<br/>✓ Deprecation Warn"]
+    M12 --> M13["1️⃣3️⃣ HMAC Signature<br/>✓ Verify Signature<br/>✓ Timestamp Check<br/>✓ Nonce Validation"]
+    M13 --> M14["1️⃣4️⃣ CSRF Protection<br/>✓ Token Validation<br/>✓ Same-Site Check<br/>✓ Origin Match"]
+    M14 --> M15["1️⃣5️⃣ JWT Auth<br/>✓ Extract Token<br/>✓ Verify Signature<br/>✓ Check Expiry"]
+    M15 --> M16["1️⃣6️⃣ Zero Trust Score<br/>✓ Device Score<br/>✓ Behavior Score<br/>✓ IP & Geographic"]
+    M16 --> Decision1{"Trust Score<br/>Acceptable?"}
+    Decision1 -->|No| Challenge["Challenge Required<br/>MFA/TOTP/Verification"]
+    Challenge --> M17
+    Decision1 -->|Yes| M17["1️⃣7️⃣ Replay Attack Prevention<br/>✓ Check Used Nonces<br/>✓ Timestamp Window<br/>✓ Store Nonce"]
+    M17 --> M18["1️⃣8️⃣ WAF Protection<br/>✓ Pattern Detection<br/>✓ Payload Analysis<br/>✓ SQL Injection Check"]
+    M18 --> M19["1️⃣9️⃣ DDoS Protection<br/>✓ Connection Limit<br/>✓ Bandwidth Check<br/>✓ Adaptive Throttle"]
+    M19 --> M20["2️⃣0️⃣ Auto-Logout Check<br/>✓ Inactivity Timer<br/>✓ Session Timeout<br/>✓ Device Check"]
+    M20 --> M21["2️⃣1️⃣ CSP Nonce<br/>✓ Generate Nonce<br/>✓ Inject Header<br/>✓ Template Pass"]
+    M21 --> Handler["🎯 Route Handler<br/>Controller Logic<br/>Business Process"]
+    Handler --> Response{"Error?"}
+    Response -->|Yes| ErrorMW["❌ Error Middleware<br/>✓ Catch Exception<br/>✓ Log Error<br/>✓ Format Response"]
+    Response -->|No| SuccessMW["✅ Success Response<br/>✓ JSON Serialize<br/>✓ Add Headers<br/>✓ Status Code"]
+    ErrorMW --> End["📤 HTTP Response<br/>To Client"]
+    SuccessMW --> End
+
+    %% Styling
+    classDef input fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
+    classDef security fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
+    classDef validation fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px,color:#000
+    classDef auth fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000
+    classDef processing fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    classDef output fill:#fce4ec,stroke:#880e4f,stroke-width:2px,color:#000
+    classDef decision fill:#fffde7,stroke:#f57f17,stroke-width:2px,color:#000
+
+    class M1,M2,M3,M4 input
+    class M5,M6,M13,M18,M19 security
+    class M7,M8,M9,M10 validation
+    class M15,M16 auth
+    class M11,M12,M14,M17,M20,M21 processing
+    class Handler output
+    class Decision1,Response decision
+    class Start,End,Challenge,ErrorMW,SuccessMW output
+```
+
+---
+
 ## Middleware Execution Order
 
 ```
