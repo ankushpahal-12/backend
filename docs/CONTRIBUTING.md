@@ -1,5 +1,83 @@
 # Contributing Guidelines
 
+## Development Workflow Diagram
+
+```mermaid
+graph TB
+    Start[" Start Contributing"]
+    
+    Start --> Fork["1️⃣ Fork Repository<br/>Click Fork on GitHub<br/>Creates your copy"]
+    
+    Fork --> Clone["2️⃣ Clone Your Fork<br/>git clone your-fork<br/>Add upstream remote"]
+    
+    Clone --> Setup["3️⃣ Setup Environment<br/>npm install<br/>Configure .env<br/>Install pre-commit hooks"]
+    
+    Setup --> Branch["4️⃣ Create Feature Branch<br/>git checkout -b feature/name<br/>Branch naming convention<br/>feature/* or bugfix/*"]
+    
+    Branch --> Code["5️⃣ Write Code<br/>Follow style guide<br/>ESLint & Prettier<br/>Type safety (TypeScript)"]
+    
+    Code --> Test["6️⃣ Write Tests<br/>Unit tests<br/>Integration tests<br/>Security tests"]
+    
+    Test --> Local["7️⃣ Local Testing<br/>npm run dev<br/>npm run test<br/>npm run test:security"]
+    
+    Local --> Decision1{"Tests Pass?"}
+    
+    Decision1 -->|No| Code
+    Decision1 -->|Yes| Lint["8️⃣ Run Linter<br/>npm run lint<br/>npm run format<br/>Fix warnings"]
+    
+    Lint --> Decision2{"No Issues?"}
+    
+    Decision2 -->|Issues| Code
+    Decision2 -->|Clean| Commit["9️⃣ Commit Changes<br/>git add .<br/>Conventional commits<br/>feat: add feature<br/>fix: resolve bug<br/>docs: update readme"]
+    
+    Commit --> Push["🔟 Push to Fork<br/>git push origin feature/name<br/>Updates your GitHub fork"]
+    
+    Push --> PR["1️⃣1️⃣ Create Pull Request<br/>Click Create PR<br/>Fill PR template<br/>Link to issue<br/>Describe changes"]
+    
+    PR --> Review["1️⃣2️⃣ Code Review<br/>Maintainers review<br/>Feedback & discussion<br/>Request changes if needed"]
+    
+    Review --> Decision3{"Approved?"}
+    
+    Decision3 -->|Changes Requested| Update["1️⃣3️⃣ Update PR<br/>Make requested changes<br/>git push (auto-update PR)<br/>Respond to comments"]
+    
+    Update --> Review
+    
+    Decision3 -->|Approved| Merge["1️⃣4️⃣ Merge to Main<br/>Maintainer merges PR<br/>CI/CD runs<br/>Deploys to staging"]
+    
+    Merge --> Cleanup["1️⃣5️⃣ Cleanup<br/>Delete feature branch<br/>Sync fork with upstream<br/>git fetch upstream<br/>git rebase upstream/main"]
+    
+    Cleanup --> Success["✅ Contribution Complete<br/>Your code is live!<br/>Thank you!"]
+    
+    %% CI/CD checks
+    Commit -.->|Trigger| CI["🤖 CI/CD Pipeline<br/>Run Tests<br/>Lint Check<br/>Security Scan<br/>Build Check"]
+    CI -.->|Results| PR
+    
+    %% Parallel activities
+    Local -.->|Optional| Docs["📚 Update Docs<br/>README changes<br/>API docs<br/>Comments"]
+    Docs -.->|Include| Commit
+    
+    %% Styling
+    classDef setup fill:#e3f2fd,stroke:#1565c0,color:#000
+    classDef dev fill:#e8f5e9,stroke:#1b5e20,color:#000
+    classDef testing fill:#fff3e0,stroke:#e65100,color:#000
+    classDef submission fill:#f3e5f5,stroke:#6a1b9a,color:#000
+    classDef review fill:#ffebee,stroke:#c62828,color:#000
+    classDef decision fill:#fffde7,stroke:#f57f17,color:#000
+    classDef complete fill:#e0f2f1,stroke:#004d40,color:#000
+    classDef automation fill:#fce4ec,stroke:#880e4f,color:#000
+
+    class Start,Fork,Clone,Setup setup
+    class Branch,Code dev
+    class Test,Local,Lint testing
+    class Commit,Push,PR submission
+    class Review,Update,Merge,Cleanup review
+    class Decision1,Decision2,Decision3 decision
+    class Success complete
+    class CI,Docs automation
+```
+
+---
+
 ## Welcome to the Assessment Platform Project
 
 Thank you for your interest in contributing! This guide will help you understand how to contribute effectively to the project.
@@ -515,5 +593,3 @@ Contributors will be recognized in:
 - GitHub contributor statistics
 
 Thank you for contributing!
-
-
