@@ -1,7 +1,13 @@
 import nodemailer from 'nodemailer';
+import { setDefaultResultOrder } from 'dns';
 import dotenv from 'dotenv';
 import config from '../config/config.js';
 import { formatDateTime } from './dateHelpers.js';
+
+// Force IPv4 DNS resolution — Render free tier blocks IPv6 outbound connections.
+// Must be called here (not just in server.js) because ES module imports are hoisted,
+// meaning this module's body runs before server.js can call setDefaultResultOrder.
+setDefaultResultOrder('ipv4first');
 
 // Escape HTML special characters to prevent XSS via dynamic email content
 const escapeHtml = (str) => {
