@@ -1,5 +1,89 @@
 # Database Schema & Documentation
 
+## Database Collections Relationship Diagram
+
+```mermaid
+graph TB
+    subgraph Users["👥 User Management"]
+        UsersColl["Users<br/>Core Profiles<br/>Credentials<br/>MFA Settings"]
+        DeviceStore["DeviceStore<br/>Device Fingerprints<br/>Device Info"]
+        BehaviorStore["BehaviorStore<br/>User Behavior<br/>Login Patterns<br/>Anomalies"]
+    end
+
+    subgraph Auth["🔐 Authentication & Sessions"]
+        AuthSession["AuthSessions<br/>Active Sessions<br/>Tokens<br/>Device Refs"]
+        LoginAttempts["LoginAttempts<br/>Failed Attempts<br/>IP Tracking<br/>Timestamps"]
+        MFAChallenges["MFAChallenges<br/>MFA State<br/>OTP Codes<br/>Verification"]
+        EmailOTP["EmailVerificationOTP<br/>Email Verification<br/>OTP Codes<br/>Expiry"]
+    end
+
+    subgraph Security["🛡️ Security & Compliance"]
+        IPBlacklist["IPBlacklist<br/>Blocked IPs<br/>Geofencing<br/>Reasons"]
+        AuditLogs["AuditLogs<br/>Security Events<br/>User Actions<br/>Timestamps"]
+        ApiKeys["ApiKeys<br/>API Credentials<br/>Permissions<br/>Rotation"]
+    end
+
+    subgraph Content["📚 Content & Assessment"]
+        Tests["Tests<br/>Assessment Content<br/>Metadata<br/>Settings"]
+        Questions["Questions<br/>Test Questions<br/>Answers<br/>Options"]
+        Submissions["Submissions<br/>User Responses<br/>Scores<br/>Timestamps"]
+    end
+
+    subgraph Billing["💰 Billing & Subscriptions"]
+        Subscriptions["Subscriptions<br/>User Plans<br/>Billing Info<br/>Renewal Dates"]
+        Payments["Payments<br/>Transaction History<br/>Invoices<br/>Status"]
+    end
+
+    %% User relationships
+    UsersColl -->|1:Many| AuthSession
+    UsersColl -->|1:Many| LoginAttempts
+    UsersColl -->|1:Many| DeviceStore
+    UsersColl -->|1:Many| BehaviorStore
+    UsersColl -->|1:Many| AuditLogs
+    UsersColl -->|1:Many| ApiKeys
+    UsersColl -->|1:Many| Tests
+    UsersColl -->|1:Many| Submissions
+    UsersColl -->|1:1| Subscriptions
+
+    %% Auth relationships
+    AuthSession -->|Ref| DeviceStore
+    LoginAttempts -->|Ref| IPBlacklist
+    MFAChallenges -->|Ref| UsersColl
+    EmailOTP -->|Ref| UsersColl
+    AuthSession -->|Stores| MFAChallenges
+
+    %% Security relationships
+    IPBlacklist -->|Blocks| AuthSession
+    AuditLogs -->|Logs| LoginAttempts
+    AuditLogs -->|Logs| AuthSession
+    AuditLogs -->|Logs| Submissions
+
+    %% Content relationships
+    Tests -->|1:Many| Questions
+    Tests -->|1:Many| Submissions
+    Submissions -->|Ref| UsersColl
+    Submissions -->|Logs| AuditLogs
+
+    %% Billing relationships
+    Subscriptions -->|1:Many| Payments
+    Payments -->|Logs| AuditLogs
+
+    %% Styling
+    classDef user fill:#e3f2fd,stroke:#1565c0,color:#000
+    classDef auth fill:#ffebee,stroke:#c62828,color:#000
+    classDef security fill:#fff3e0,stroke:#e65100,color:#000
+    classDef content fill:#e8f5e9,stroke:#1b5e20,color:#000
+    classDef billing fill:#f3e5f5,stroke:#6a1b9a,color:#000
+
+    class Users,UsersColl,DeviceStore,BehaviorStore user
+    class Auth,AuthSession,LoginAttempts,MFAChallenges,EmailOTP auth
+    class Security,IPBlacklist,AuditLogs,ApiKeys security
+    class Content,Tests,Questions,Submissions content
+    class Billing,Subscriptions,Payments billing
+```
+
+---
+
 ## Overview
 
 The platform uses MongoDB as its primary database, accessed through Mongoose ODM. The schema is designed for scalability, security, performance, and data integrity while supporting complex queries and relationships.
