@@ -1,3 +1,6 @@
+import { setDefaultResultOrder } from 'dns';
+setDefaultResultOrder('ipv4first'); // Render free tier has no IPv6 outbound — force IPv4 DNS resolution
+
 import config from './config/config.js';
 import connectDB from './config/db.js';
 import app from './app.js';

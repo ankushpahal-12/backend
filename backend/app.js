@@ -72,9 +72,8 @@ app.use(validateRequestFormat); // Validate request format
 app.use(ipBlacklistMiddleware); // Instantly drop known malicious IPs
 app.use(ipSpoofingDetectionMiddleware); // Detect X-Forwarded-For manipulation attempts
 
-// ════════════════════════════════════════════════════════════════════════════
+
 // 2. Helmet security headers
-// ════════════════════════════════════════════════════════════════════════════
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -84,22 +83,22 @@ app.use(helmet({
             styleSrc: ["'self'", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:", "https:"],
-            
+
             // Prevent framing in iframes (clickjacking protection)
             frameAncestors: ["'none'"],
-            
+
             // Restrict base URL (prevents base tag injection)
             baseUri: ["'self'"],
-            
+
             // Form submission endpoints
             formAction: ["'self'"],
-            
+
             // Prevent plugin embedding
             objectSrc: ["'none'"],
-            
+
             // Only allow HTTPS in production
             upgradeInsecureRequests: config.env === 'production' ? [] : [],
-            
+
             // Use wss:// and https:// in production; ws:// only in development
             connectSrc: [
                 "'self'",
@@ -269,7 +268,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
     // Capture response after it's sent
     const originalJson = res.json;
-    res.json = function(data) {
+    res.json = function (data) {
         auditLog({
             method: req.method,
             path: req.path,
@@ -311,7 +310,7 @@ app.use('/api', continuousMonitoring);
 app.get('/api/v1/csrf-token', csrfLimiter, (req, res) => {
     try {
         const csrfToken = req.csrfTokenValue || req.cookies?.csrf_token;
-        
+
         res.status(200).json({
             status: 'success',
             csrfToken,
