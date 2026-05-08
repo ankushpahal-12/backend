@@ -1,5 +1,71 @@
 # API Documentation
 
+## API Request/Response Flow Diagram
+
+```mermaid
+graph TB
+    Client["🖥️ Client Application<br/>Browser/Mobile"]
+    
+    Client -->|1. HTTP Request<br/>With JWT Token| Nginx["🌐 Nginx<br/>Reverse Proxy<br/>Port 80/443"]
+    
+    Nginx -->|2. Route Request<br/>TLS Termination| Express["📡 Express.js<br/>API Server<br/>Port 8000"]
+    
+    Express -->|3. Enter Middleware<br/>Pipeline| M1["🔒 Security Checks<br/>- CORS<br/>- Rate Limit<br/>- Bot Detection<br/>- IP Validation"]
+    
+    M1 -->|Pass| M2["🔑 Authentication<br/>- JWT Verify<br/>- Token Validate<br/>- Session Check"]
+    
+    M2 -->|Pass| M3["📋 Authorization<br/>- Role Check<br/>- Permission Check<br/>- Resource Access"]
+    
+    M3 -->|Pass| Route["🎯 Route Handler<br/>Match Endpoint"]
+    
+    Route -->|Matched| Controller["🎮 Controller Logic<br/>- Validate Input<br/>- Business Logic<br/>- Process Data"]
+    
+    Controller -->|Query/Write| DB["💾 MongoDB<br/>Database<br/>Collections"]
+    
+    DB -->|Data| Controller
+    
+    Controller -->|Success| Success["✅ Format Response<br/>- JSON Serialize<br/>- Status Code 200<br/>- Add Headers"]
+    
+    Controller -->|Error| ErrorCtrl["❌ Error Handling<br/>- Categorize Error<br/>- Status Code<br/>- Error Message"]
+    
+    Success -->|4. Response| Express
+    ErrorCtrl -->|4. Error Response| Express
+    
+    Express -->|5. Add Security Headers<br/>HSTS, CSP, X-Frame| Nginx
+    
+    Nginx -->|6. HTTPS Response| Client
+    
+    Client -->|7. Parse JSON<br/>Update UI| Browser["🎨 Browser/App<br/>Render Response<br/>Update State"]
+    
+    %% Async Operations
+    Controller -.->|Async Jobs| Queue["⏱️ Job Queue<br/>Background Tasks<br/>Notifications"]
+    Queue -.->|Callback| Controller
+    
+    %% Monitoring
+    Express -.->|Logs| Monitor["📊 Monitoring<br/>- Morgan Logger<br/>- Audit Log<br/>- Error Tracking"]
+    
+    %% Styling
+    classDef client fill:#e3f2fd,stroke:#1565c0,color:#000
+    classDef proxy fill:#f3e5f5,stroke:#6a1b9a,color:#000
+    classDef api fill:#e8f5e9,stroke:#1b5e20,color:#000
+    classDef security fill:#ffebee,stroke:#c62828,color:#000
+    classDef logic fill:#fff3e0,stroke:#e65100,color:#000
+    classDef database fill:#fce4ec,stroke:#880e4f,color:#000
+    classDef response fill:#e0f2f1,stroke:#004d40,color:#000
+    classDef async fill:#f1f8e9,stroke:#33691e,color:#000
+    
+    class Client,Browser client
+    class Nginx proxy
+    class Express api
+    class M1,M2,M3 security
+    class Route,Controller logic
+    class DB database
+    class Success,ErrorCtrl,Monitor response
+    class Queue async
+```
+
+---
+
 ## Base URL
 
 **Development:** `http://localhost:8000/api/v1`
