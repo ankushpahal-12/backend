@@ -6,6 +6,7 @@
  */
 
 // India-specific IP ranges (ISP providers commonly used in India)
+import ipaddr from 'ipaddr.js';
 const indiaIPRanges = [
     { start: '49.204.0.0', end: '49.204.255.255' },          // Airtel
     { start: '59.88.0.0', end: '59.88.255.255' },            // BSNL
@@ -32,6 +33,27 @@ const suspiciousActivityTracker = new Map();
 const SUSPICIOUS_THRESHOLD = 5;  // Number of suspicious activities before blocking
 const ACTIVITY_WINDOW = 15 * 60 * 1000;  // 15 minutes
 
+/*
+Normalise IP addresses to handle IPv4-mapped IPv6 and other formats.
+ */
+const normaliseIp=(ip)=>{
+    if(!ip){
+        return '';
+    } 
+    const trimmedIp=ip.trim();
+    try{
+        if(ipaddr.isValid(trimmedIp)){
+            const parsed=ipaddr.parse(trimmedIp);
+            if(parsed.kind()==='ipv6'&& parsed.isIPv4MappedAddress()){
+                return parsed.toIPv4Address().toString();
+            }
+        }
+    }
+    catch(error){
+        console.error(`[SECURITY] Error normalising IP: ${trimmedIp}} :, ${error.message}`);
+    }
+    return trimmedIP;
+};
 /**
  * Convert IP string to number for range comparison
  */
@@ -110,15 +132,26 @@ const cleanupActivityTracker = () => {
 
 export const ipBlacklistMiddleware = (req, res, next) => {
     // Determine the true client IP, accounting for proxies
-    const clientIP = req.ip || req.connection.remoteAddress;
+    
+    const rawIp = req.ip || req.connection.remoteAddress|| '';
+    const clientIP = normaliseIp(rawIp);
+    
 
     // Cleanup old records periodically
     if (Math.random() < 0.01) {
         cleanupActivityTracker();
     }
 
-    // Check whitelist first
-    if (whitelistedIPs.has(clientIP)) {
+    // Explicitly bypass health routes completely
+    if(req.originalUrl ==='/api/health'|| req.originalUrl==='/api/v1/health'){
+        return next();
+    }
+     // Check whitelist first
+    if (whitelistedIPs.has(clientIP)||
+        whitelistedIPs.has(rawIP) ||
+        clientIP.startsWith('10.') || 
+        clientIP.startsWith('172.') || 
+        clientIP.startsWith('192.168.')) {
         return next();
     }
 
@@ -143,15 +176,17 @@ export const ipBlacklistMiddleware = (req, res, next) => {
  * Called by other security middlewares
  */
 export const reportSuspiciousActivity = (ip, reason = 'Suspicious pattern detected') => {
-    return trackSuspiciousActivity(ip, reason);
+    const cleanIp=normaliseIp(ip);
+    return trackSuspiciousActivity(cleanIp, reason);
 };
 
 /**
  * Add IP to dynamic blacklist
  */
 export const addToBlacklist = (ip) => {
-    blacklistedIPs.add(ip);
-    console.log(`[SECURITY] IP added to blacklist: ${ip}`);
+    const cleanIp=normaliseIp(ip);
+    blacklistedIPs.add(cleanIp);
+    console.log(`[SECURITY] IP added to blacklist: ${cleanIp}`);
 };
 
 /**
@@ -180,16 +215,18 @@ export const getWhitelist = () => {
  * Add IP to whitelist (trusted IPs)
  */
 export const addToWhitelist = (ip) => {
-    whitelistedIPs.add(ip);
-    console.log(`[SECURITY] IP added to whitelist: ${ip}`);
+    const cleanIp=normaliseIp(ip);
+    whitelistedIPs.add(cleanIp);
+    console.log(`[SECURITY] IP added to whitelist: ${cleanIp}`);
 };
 
 /**
  * Remove IP from whitelist
  */
 export const removeFromWhitelist = (ip) => {
-    whitelistedIPs.delete(ip);
-    console.log(`[SECURITY] IP removed from whitelist: ${ip}`);
+    const cleanIp=normaliseIp(ip);
+    whitelistedIPs.delete(cleanIp);
+    console.log(`[SECURITY] IP removed from whitelist: ${cleanIp}`);
 };
 
 /**

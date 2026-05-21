@@ -57,7 +57,7 @@ const app = express();
 if (config.env === 'production') {
     // Trust 1 proxy hop (Render's load balancer) so req.ip returns the real client IP.
     // Actual proxy chain security is enforced by validateProxyHeaders middleware below.
-    app.set('trust proxy', 1);
+    app.set('trust proxy', true);
 } else {
     app.set('trust proxy', false);
 }
