@@ -2,8 +2,11 @@ services:
   - type: web
     name: expense-tracker-backend
     runtime: docker
-    dockerContext: ./backend
-    dockerfilePath: ./backend/Dockerfile.prod
+    # 🌟 FIX: Change dockerContext to rootDir 
+    rootDir: backend
+    # 🌟 FIX: Since rootDir moves you into the backend/ folder, 
+    # the Dockerfile.prod path is now relative to that folder context.
+    dockerfilePath: Dockerfile.prod
     plan: free
     envVars:
       - key: NODE_ENV
@@ -11,7 +14,7 @@ services:
       - key: PORT
         value: 5000
       - key: MONGODB_URI
-        sync: false          # Set this manually in Render dashboard
+        sync: false          
       - key: JWT_SECRET
         sync: false
       - key: JWT_REFRESH_SECRET
