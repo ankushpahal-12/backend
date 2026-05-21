@@ -379,7 +379,9 @@ app.use('/api/admin', (req, res) => {
 // 404 handler
 app.use((req, res, next) => {
     // Don't echo the full URL back — aids attacker reconnaissance
-    next(new AppError('The requested resource was not found.', 404));
+    const error = new Error(`The requested resource was not found:${req.method}${req.originalUrl}`)
+    error.status=404;
+    next(error);
 });
 
 
