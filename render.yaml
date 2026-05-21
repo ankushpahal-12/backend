@@ -2,9 +2,8 @@ services:
   - type: web
     name: expense-tracker-backend
     runtime: docker
-    dockerfilePath: ./backend/Dockerfile.prod
     dockerContext: ./backend
-    # Note: dockerfilePath is always relative to the repo root in render.yaml
+    dockerfilePath: ./backend/Dockerfile.prod
     plan: free
     envVars:
       - key: NODE_ENV
