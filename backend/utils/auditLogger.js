@@ -1,6 +1,8 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import crypto from 'crypto';
+import * as UAParser from 'ua-parser-js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,6 +14,89 @@ const AUDIT_LOG_FILE = path.join(AUDIT_LOG_DIR, 'audit.log');
 await fs.mkdir(AUDIT_LOG_DIR, { recursive: true }).catch(err => {
     if (err.code !== 'EEXIST') console.error('Failed to create log directory:', err);
 });
+
+/**
+ * Extract audit context from request
+ * Supports both authenticated users and unauthenticated test attempt users
+ */
+export function extractAuditContext(req) {
+    const userId = req.user?.id || req.testAttempt?.userId || 'unknown';
+    const userEmail = req.user?.email || req.testAttempt?.email || 'unknown';
+    
+    // Parse user agent for device info
+    const ua = req.headers['user-agent'] || '';
+    const parser = new UAParser(ua);
+    const uaResult = parser.getResult();
+
+    const browser = `${uaResult.browser.name || 'Unknown'} ${uaResult.browser.version || ''}`.trim();
+    const os = `${uaResult.os.name || 'Unknown'} ${uaResult.os.version || ''}`.trim();
+    
+    // Extract client IP
+    const ip = (req.headers['x-forwarded-for']?.split(',')[0] || 
+                req.connection?.remoteAddress || 
+                req.socket?.remoteAddress || 
+                '').trim() || 'unknown';
+    
+    // Calculate device fingerprint
+    const deviceFingerprint = generateDeviceFingerprint(ua);
+    
+    // Risk assessment
+    const riskLevel = assessRiskLevel(ua, ip);
+    
+    return {
+        userId,
+        userEmail,
+        riskLevel,
+        deviceFingerprint,
+        browser,
+        os,
+        ip,
+        userAgent: ua
+    };
+}
+
+/**
+ * Generate device fingerprint based on user agent
+ */
+function generateDeviceFingerprint(userAgent) {
+    if (!userAgent) return 'unknown';
+    return crypto.createHash('sha256').update(userAgent).digest('hex').substring(0, 16);
+}
+
+/**
+ * Assess risk level based on request characteristics
+ */
+function assessRiskLevel(userAgent, ip) {
+    let riskScore = 0;
+    
+    // Check for missing user agent (suspicious)
+    if (!userAgent) riskScore += 20;
+    
+    // Check for bot/automation tools
+    const botPatterns = /bot|crawler|spider|scraper|automation|selenium|puppeteer|playwright|headless|phantomjs|curl|wget|python|java(?!script)/i;
+    if (botPatterns.test(userAgent)) {
+        riskScore += 30;
+    }
+    
+    // Check IP reputation (simple check - in production, use external service)
+    if (isPrivateIP(ip)) riskScore += 5;
+    
+    // Determine risk level
+    if (riskScore >= 50) return 'high';
+    if (riskScore >= 20) return 'medium';
+    return 'low';
+}
+
+/**
+ * Check if IP is private/internal
+ */
+function isPrivateIP(ip) {
+    if (ip === 'unknown' || !ip) return true;
+    const privateRanges = [
+        /^127\./, /^10\./, /^172\.(1[6-9]|2[0-9]|3[01])\./, /^192\.168\./, /^::1/, /^fc[0-9a-f]{2}:/i
+    ];
+    return privateRanges.some(range => range.test(ip));
+}
 
 /**
  * Log security and audit events

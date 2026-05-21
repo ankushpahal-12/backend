@@ -1,31 +1,12 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { ENV } from '../config/env';
 import toast from 'react-hot-toast';
+import { SocketContext, type ServerLoad, type SignalStrength } from './SocketContextDef';
 
-export type SignalStrength = 'strong' | 'moderate' | 'weak' | 'offline';
-
-export interface ServerLoad {
-    cpuUsagePercent: number;
-    loadAvg: number;
-    freeMemMb: number;
-    totalMemMb: number;
-}
-
-interface SocketContextType {
-    socket: Socket | null;
-    isConnected: boolean;
-    latencyMs: number | null;
-    signalStrength: SignalStrength;
-    serverLoad: ServerLoad | null;
-    emit: (event: string, data: unknown) => void;
-    connectPublic: (requestId: string) => void;
-    startPinging: () => void;
-    stopPinging: () => void;
-}
-
-const SocketContext = createContext<SocketContextType | undefined>(undefined);
+export { SocketContext } from './SocketContextDef';
+export type { SocketContextType, ServerLoad, SignalStrength } from './SocketContextDef';
 
 function computeSignalStrength(latencyMs: number | null, connected: boolean): SignalStrength {
     if (!connected) return 'offline';
@@ -43,8 +24,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [serverLoad, setServerLoad] = useState<ServerLoad | null>(null);
     const socketRef = useRef<Socket | null>(null);
     const pingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-    const signalStrength = computeSignalStrength(latencyMs, isConnected);
+    const isMountedRef = useRef(true);
+    const isConnectingRef = useRef(false);
 
     // ── Ping/pong for latency measurement ──
     const startPinging = useCallback(() => {
@@ -72,6 +53,21 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     }, []);
 
+    const signalStrength = computeSignalStrength(latencyMs, isConnected);
+
+    // Track mounted state to prevent setState on unmounted component
+    useEffect(() => {
+        return () => {
+            isMountedRef.current = false;
+            // Cleanup public socket on unmount
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+                socketRef.current = null;
+            }
+            stopPinging();
+        };
+    }, [stopPinging]);
+
     // ── Authenticated socket (for logged-in users) ──
     useEffect(() => {
         if (isAuthenticated) {
@@ -82,30 +78,41 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             // the HttpOnly cookie automatically, just like HTTP requests.
             const newSocket = io(socketUrl, {
                 withCredentials: true,
-                transports: ['websocket'],
+                transports: ['polling', 'websocket'],
                 reconnection: true,
-                reconnectionAttempts: 5,
-                reconnectionDelay: 1000
+                reconnectionAttempts: 8,
+                reconnectionDelay: 1500,
+                reconnectionDelayMax: 10000,
+                closeOnBeforeunload: false,
+                autoConnect: true
             });
 
             newSocket.on('connect', () => {
-                console.log('[SOCKET] Connected to bridge');
-                setIsConnected(true);
+                if (isMountedRef.current) {
+                    setIsConnected(true);
+                    setSocket(newSocket);
+                }
             });
 
             newSocket.on('disconnect', () => {
-                console.log('[SOCKET] Disconnected from bridge');
-                setIsConnected(false);
-                setLatencyMs(null);
+                if (isMountedRef.current) {
+                    setIsConnected(false);
+                    setLatencyMs(null);
+                    setSocket(null);
+                }
             });
 
             newSocket.on('connect_error', (err) => {
-                console.error('[SOCKET] Connection error:', err.message);
-                setIsConnected(false);
+                if (isMountedRef.current) {
+                    console.error('[SOCKET] Connection error:', err.message);
+                    setIsConnected(false);
+                }
             });
 
             newSocket.on('server_load', (data: ServerLoad) => {
-                setServerLoad(data);
+                if (isMountedRef.current) {
+                    setServerLoad(data);
+                }
             });
 
             // ── Real-time security alert toasts ──
@@ -117,6 +124,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 severity: 'success' | 'error' | 'warning' | 'info';
                 message: string;
             }) => {
+                if (!isMountedRef.current) return;
                 const toastFn = data.severity === 'success'
                     ? toast.success
                     : data.severity === 'error'
@@ -131,31 +139,54 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             });
 
             socketRef.current = newSocket;
-            setSocket(newSocket);
 
             return () => {
                 stopPinging();
+                if (isMountedRef.current) {
+                    setSocket(null);
+                }
                 newSocket.close();
                 socketRef.current = null;
-                setSocket(null);
             };
         }
     }, [isAuthenticated, token, stopPinging]);
 
     // ── Public tracking socket (for auth flows before login) ──
     const connectPublic = useCallback((requestId: string) => {
-        if (socketRef.current) socketRef.current.close();
+        // Prevent race condition: don't create multiple sockets simultaneously
+        if (isConnectingRef.current) {
+            console.warn('[Socket] Connection attempt in progress, skipping duplicate');
+            return;
+        }
+
+        isConnectingRef.current = true;
+
+        // Close previous socket gracefully (don't immediately dispose)
+        if (socketRef.current?.connected) {
+            socketRef.current.disconnect();
+            socketRef.current = null;
+        }
         stopPinging();
 
         const socketUrl = ENV.socketUrl;
         const newSocket = io(socketUrl, {
             auth: { requestId },
-            transports: ['websocket']
+            transports: ['polling', 'websocket'],
+            reconnection: true,
+            reconnectionAttempts: 8,
+            reconnectionDelay: 1500,
+            reconnectionDelayMax: 10000,
+            closeOnBeforeunload: false,
+            autoConnect: true
         });
 
         newSocket.on('connect', () => {
-            console.log('[SOCKET] Public tracking connected:', requestId);
-            setIsConnected(true);
+            isConnectingRef.current = false;
+            if (isMountedRef.current) {
+                setIsConnected(true);
+                setSocket(newSocket);
+                socketRef.current = newSocket;
+            }
             // Auto-start pinging so latency shows in loading overlay
             if (pingIntervalRef.current) clearInterval(pingIntervalRef.current);
             pingIntervalRef.current = setInterval(() => {
@@ -163,27 +194,43 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 const sent = Date.now();
                 newSocket.volatile.emit('ping');
                 newSocket.once('pong', () => {
-                    setLatencyMs(Date.now() - sent);
+                    if (isMountedRef.current) {
+                        setLatencyMs(Date.now() - sent);
+                    }
                 });
             }, 3000);
             // First ping immediately
             const sent = Date.now();
             newSocket.volatile.emit('ping');
-            newSocket.once('pong', () => setLatencyMs(Date.now() - sent));
+            newSocket.once('pong', () => {
+                if (isMountedRef.current) {
+                    setLatencyMs(Date.now() - sent);
+                }
+            });
+        });
+
+        newSocket.on('connect_error', (err) => {
+            isConnectingRef.current = false;
+            console.error('[Socket:Public] Connection error:', err.message);
         });
 
         newSocket.on('disconnect', () => {
-            setIsConnected(false);
-            setLatencyMs(null);
+            isConnectingRef.current = false;
+            if (isMountedRef.current) {
+                setIsConnected(false);
+                setLatencyMs(null);
+                setSocket(null);
+            }
             stopPinging();
         });
 
         newSocket.on('server_load', (data: ServerLoad) => {
-            setServerLoad(data);
+            if (isMountedRef.current) {
+                setServerLoad(data);
+            }
         });
 
         socketRef.current = newSocket;
-        setSocket(newSocket);
     }, [stopPinging]);
 
     const emit = useCallback((event: string, data: unknown) => {
@@ -200,13 +247,4 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             {children}
         </SocketContext.Provider>
     );
-};
-
-// eslint-disable-next-line react-refresh/only-export-components
-export const useSocket = () => {
-    const context = useContext(SocketContext);
-    if (!context) {
-        throw new Error('useSocket must be used within a SocketProvider');
-    }
-    return context;
 };

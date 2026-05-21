@@ -8,7 +8,7 @@ import { Button, Stack, Alert, CircularProgress, TextField, Box, Typography, Ste
 import Modal from '../../../../components/ui/Modal';
 import { useVerifyEmailOTP } from '../../hooks/useVerifyEmailOTP';
 import { useSetPassword } from '../../hooks/useSetPassword';
-import type { User } from '../../hooks/useFetchUsers';
+import type { User } from '../../hooks/useUserManagement';
 
 interface EmailVerificationModalProps {
   open: boolean;

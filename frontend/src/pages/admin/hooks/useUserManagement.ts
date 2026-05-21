@@ -1,7 +1,25 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import * as adminApi from '../services/adminApi';
+import { toastNotify } from '../utils/toastNotify';
+import { validators } from '../utils/validators';
+
+
+ 
+export interface User {
+  _id: string;
+  name: string;
+  email: string;
+  role: 'user' | 'admin';
+  isBlocked: boolean;
+  blockedReason?: string;
+  blockedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export type UserEvent = 
+  | 'fetching_users'
+  | 'users_fetched'
   | 'creating_user'
   | 'user_created'
   | 'deleting_user'
@@ -14,10 +32,8 @@ export type UserEvent =
   | 'user_unblocked'
   | 'resetting_password'
   | 'password_reset'
-  | 'terminating_session'
-  | 'session_terminated'
-  | 'fetching_users'
-  | 'users_fetched'
+  | 'force_logout_user'
+  | 'user_logout'
   | 'error';
 
 export interface UserEventLog {
@@ -28,301 +44,579 @@ export interface UserEventLog {
   error?: Error;
 }
 
-interface UseUserManagementReturn {
+interface UserManagementState {
+  users: User[];
   loading: boolean;
   error: string | null;
+  page: number;
+  limit: number;
+  total: number;
   eventLog: UserEventLog[];
-  createUser: (data: { name: string; email: string; password: string; role?: string }) => Promise<void>;
-  deleteUser: (userId: string) => Promise<void>;
-  updateUserRole: (userId: string, role: string) => Promise<void>;
-  blockUser: (userId: string, reason?: string) => Promise<void>;
-  unblockUser: (userId: string) => Promise<void>;
-  resetPassword: (userId: string, password: string) => Promise<void>;
-  terminateSession: (userId: string, sessionId: string) => Promise<void>;
-  clearEventLog: () => void;
-  getLatestEvent: () => UserEventLog | null;
 }
 
+interface UseUserManagementReturn {
+  // State
+  users: User[];
+  loading: boolean;
+  error: string | null;
+  page: number;
+  limit: number;
+  total: number;
+  eventLog: UserEventLog[];
+  
+  // Fetch operations
+  fetchUsers: (page?: number, limit?: number) => Promise<{ users: User[]; total: number }>;
+  refreshUsers: () => Promise<{ users: User[]; total: number }>;
+  setPage: (page: number) => Promise<void>;
+  searchUsers: (term: string) => User[];
+  
+  // User management operations
+  addUser: (userData: { name: string; email: string; role?: string }) => Promise<boolean>;
+  deleteUser: (userId: string, userName: string) => Promise<boolean>;
+  updateUserRole: (userId: string, newRole: 'user' | 'admin', userName: string) => Promise<boolean>;
+  blockUser: (userId: string, reason: string, userName: string) => Promise<boolean>;
+  unblockUser: (userId: string, userName: string) => Promise<boolean>;
+  resetPassword: (userId: string, userName: string) => Promise<boolean>;
+  forceLogout: (userId: string, userName: string) => Promise<boolean>;
+  
+  // Utility
+  clearEventLog: () => void;
+  getLatestEvent: () => UserEventLog | null;
+  clearError: () => void;
+}
+// HOOK IMPLEMENTATION
 export const useUserManagement = (onEventChange?: (event: UserEventLog) => void): UseUserManagementReturn => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [eventLog, setEventLog] = useState<UserEventLog[]>([]);
+  // STATE MANAGEMENT
+ 
+  const [state, setState] = useState<UserManagementState>({
+    users: [],
+    loading: false,
+    error: null,
+    page: 0,
+    limit: 10,
+    total: 0,
+    eventLog: [],
+  });
 
+  const stateRef = useRef<UserManagementState>(state);
+
+  // Update ref whenever state changes
+  stateRef.current = state;
+
+ 
+  // UTILITY FUNCTIONS
+ 
+
+  /**
+   * Add event to log and trigger callback
+   */
   const addEvent = useCallback((event: UserEventLog) => {
-    setEventLog((prev) => [event, ...prev]);
+    setState((prev) => ({
+      ...prev,
+      eventLog: [event, ...prev.eventLog].slice(0, 50), // Keep last 50 events
+    }));
     onEventChange?.(event);
   }, [onEventChange]);
 
-  const createUser = useCallback(async (data: { name: string; email: string; password: string; role?: string }) => {
-    setLoading(true);
-    setError(null);
+  /**
+   * Create event object with standardized structure
+   */
+  const createEvent = (type: UserEvent, message: string, userId?: string, error?: Error): UserEventLog => {
+    return {
+      type,
+      message,
+      timestamp: new Date(),
+      userId,
+      error,
+    };
+  };
 
-    try {
-      addEvent({
-        type: 'creating_user',
-        message: `Creating user ${data.name}...`,
-        timestamp: new Date(),
-      });
-
-      await adminApi.createUser(data);
-
-      addEvent({
-        type: 'user_created',
-        message: `User ${data.name} created successfully`,
-        timestamp: new Date(),
-      });
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to create user';
-      setError(errorMsg);
-      addEvent({
-        type: 'error',
-        message: errorMsg,
-        timestamp: new Date(),
-        error: err instanceof Error ? err : new Error(errorMsg),
-      });
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+  /**
+   * Handle operation errors with logging
+   */
+  const handleError = useCallback((err: unknown, operationName: string, userId?: string): string => {
+    const errorMsg = err instanceof Error ? err.message : `${operationName} failed`;
+    console.error(`❌ Error in ${operationName}:`, err);
+    
+    setState((prev) => ({ ...prev, error: errorMsg }));
+    addEvent(createEvent('error', errorMsg, userId, err instanceof Error ? err : new Error(errorMsg)));
+    
+    return errorMsg;
   }, [addEvent]);
 
-  const deleteUser = useCallback(async (userId: string) => {
-    setLoading(true);
-    setError(null);
+  /**
+   * Fetch users from backend with pagination
+   */
+  const fetchUsers = useCallback(async (page: number = 0, limit: number = 10) => {
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+    addEvent(createEvent('fetching_users', `Fetching users (page ${page + 1}, limit ${limit})...`));
 
     try {
-      addEvent({
-        type: 'deleting_user',
-        message: 'Deleting user...',
-        timestamp: new Date(),
-        userId,
-      });
+      const apiPage = page + 1; // Convert 0-indexed to 1-indexed for API
+
+      const response = await adminApi.getAllUsers(apiPage, limit);
+
+      const users: User[] = (response.users as unknown as User[]) || [];
+      const total = response.total || 0;
+
+      setState((prev) => ({
+        ...prev,
+        users,
+        total,
+        page,
+        limit,
+        loading: false,
+      }));
+
+      addEvent(createEvent('users_fetched', `Successfully fetched ${users.length} users`));
+      toastNotify.success(`Loaded ${users.length} users`, 'Users Fetched');
+
+      return { users, total };
+    } catch (err) {
+      const errorMsg = handleError(err, 'fetchUsers');
+      toastNotify.error(errorMsg, 'Failed to Load Users');
+      setState((prev) => ({ ...prev, loading: false }));
+      return { users: [], total: 0 };
+    } finally {
+      // fetchUsers operation completed
+    }
+  }, [addEvent, handleError]);
+
+  /**
+   Refresh users with current page/limit**/
+
+  const refreshUsers = useCallback(async () => {
+    try {
+      const { page, limit } = stateRef.current;
+      return await fetchUsers(page, limit);
+    } catch (err) {
+      handleError(err, 'refreshUsers');
+      return { users: [], total: 0 };
+    }
+  }, [fetchUsers, handleError]);
+
+  /**
+   * Change page and fetch
+   */
+  const setPage = useCallback(async (newPage: number) => {
+    try {
+      const { limit } = stateRef.current;
+      await fetchUsers(newPage, limit);
+    } catch (err) {
+      handleError(err, 'setPage');
+    }
+  }, [fetchUsers, handleError]);
+
+  /**
+   * Search users locally (in-memory search)*/
+  const searchUsers = useCallback((searchTerm: string): User[] => {
+    try {
+      if (!searchTerm.trim()) {
+        return stateRef.current.users;
+      }
+
+      const term = searchTerm.toLowerCase();
+      const results = stateRef.current.users.filter(
+        (user) =>
+          user.name.toLowerCase().includes(term) ||
+          user.email.toLowerCase().includes(term)
+      );
+
+      return results;
+    } catch (err) {
+      handleError(err, 'searchUsers');
+      return [];
+    }
+  }, [handleError]);
+
+
+
+  /**
+   * Add new user
+   */
+  const addUser = useCallback(async (userData: { name: string; email: string; role?: string }): Promise<boolean> => {
+    let toastId: string | number | null = null;
+
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+    addEvent(createEvent('creating_user', `Creating user ${userData.name}...`));
+
+    try {
+      toastId = toastNotify.loading(`Creating user ${userData.name}...`, 'Processing');
+
+      // Validate input
+      if (!userData.name?.trim()) {
+        throw new Error('Name is required');
+      }
+      if (!validators.isValidEmail(userData.email)) {
+        throw new Error('Invalid email format');
+      }
+
+      await adminApi.createUser(userData);
+
+      // Refresh users list
+      await refreshUsers();
+
+      if (toastId) {
+        toastNotify.update(toastId, {
+          render: `User ${userData.name} created successfully! OTP sent to their email.`,
+          type: 'success',
+          autoClose: 3000,
+        });
+      }
+
+      addEvent(createEvent('user_created', `User ${userData.name} created successfully`));
+
+      return true;
+    } catch (err) {
+      const errorMsg = handleError(err, 'addUser');
+      if (toastId) {
+        toastNotify.update(toastId, {
+          render: errorMsg,
+          type: 'error',
+          autoClose: 3000,
+        });
+      }
+      return false;
+    } finally {
+      setState((prev) => ({ ...prev, loading: false }));
+    }
+  }, [addEvent, handleError, refreshUsers]);
+
+  /**
+   * Delete user
+   */
+  const deleteUser = useCallback(async (userId: string, userName: string): Promise<boolean> => {
+    let toastId: string | number | null = null;
+
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+    addEvent(createEvent('deleting_user', `Deleting user ${userName}...`, userId));
+
+    try {
+      toastId = toastNotify.loading(`Deleting ${userName}...`, 'Processing');
 
       await adminApi.deleteUser(userId);
 
-      addEvent({
-        type: 'user_deleted',
-        message: 'User deleted successfully',
-        timestamp: new Date(),
-        userId,
-      });
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to delete user';
-      setError(errorMsg);
-      addEvent({
-        type: 'error',
-        message: errorMsg,
-        timestamp: new Date(),
-        userId,
-        error: err instanceof Error ? err : new Error(errorMsg),
-      });
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [addEvent]);
+      // Update users list immediately
+      setState((prev) => ({
+        ...prev,
+        users: prev.users.filter((u) => u._id !== userId),
+      }));
 
-  const updateUserRole = useCallback(async (userId: string, role: string) => {
-    setLoading(true);
-    setError(null);
+      if (toastId) {
+        toastNotify.update(toastId, {
+          render: `User ${userName} deleted successfully!`,
+          type: 'success',
+          autoClose: 3000,
+        });
+      }
+
+      addEvent(createEvent('user_deleted', `User ${userName} deleted successfully`, userId));
+
+      return true;
+    } catch (err) {
+      const errorMsg = handleError(err, 'deleteUser', userId);
+      if (toastId) {
+        toastNotify.update(toastId, {
+          render: errorMsg,
+          type: 'error',
+          autoClose: 3000,
+        });
+      }
+      return false;
+    } finally {
+      setState((prev) => ({ ...prev, loading: false }));
+    }
+  }, [addEvent, handleError]);
+
+  /**
+   * Update user role
+   */
+  const updateUserRole = useCallback(
+    async (userId: string, newRole: 'user' | 'admin', userName: string): Promise<boolean> => {
+      let toastId: string | number | null = null;
+
+      setState((prev) => ({ ...prev, loading: true, error: null }));
+      addEvent(createEvent('updating_role', `Changing ${userName}'s role to ${newRole}...`, userId));
+
+      try {
+        toastId = toastNotify.loading(`Updating ${userName}'s role...`, 'Processing');
+
+        await adminApi.updateUserRole(userId, newRole);
+
+        // Update users list immediately
+        setState((prev) => ({
+          ...prev,
+          users: prev.users.map((u) => (u._id === userId ? { ...u, role: newRole } : u)),
+        }));
+
+      if (toastId) {
+        toastNotify.update(toastId, {
+          render: `Role updated to ${newRole} successfully!`,
+          type: 'success',
+          autoClose: 3000,
+        });
+      }
+        return true;
+      } catch (err) {
+        const errorMsg = handleError(err, 'updateUserRole', userId);
+        if (toastId) {
+          toastNotify.update(toastId, {
+            render: errorMsg,
+            type: 'error',
+            autoClose: 3000,
+          });
+        }
+        return false;
+      } finally {
+        setState((prev) => ({ ...prev, loading: false }));
+      }
+    },
+    [addEvent, handleError]
+  );
+
+  /**
+   * Block user
+   */
+  const blockUser = useCallback(async (userId: string, reason: string, userName: string): Promise<boolean> => {
+    let toastId: string | number | null = null;
+
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+    addEvent(createEvent('blocking_user', `Blocking user ${userName}...`, userId));
 
     try {
-      addEvent({
-        type: 'updating_role',
-        message: `Changing role to ${role}...`,
-        timestamp: new Date(),
-        userId,
-      });
+      toastId = toastNotify.loading(`Blocking ${userName}...`, 'Processing');
 
-      await adminApi.updateUserRole(userId, role);
-
-      addEvent({
-        type: 'role_updated',
-        message: `Role changed to ${role} successfully`,
-        timestamp: new Date(),
-        userId,
-      });
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to update role';
-      setError(errorMsg);
-      addEvent({
-        type: 'error',
-        message: errorMsg,
-        timestamp: new Date(),
-        userId,
-        error: err instanceof Error ? err : new Error(errorMsg),
-      });
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [addEvent]);
-
-  const blockUser = useCallback(async (userId: string, reason?: string) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      addEvent({
-        type: 'blocking_user',
-        message: 'Blocking user...',
-        timestamp: new Date(),
-        userId,
-      });
+      if (!reason?.trim()) {
+        throw new Error('Block reason is required');
+      }
 
       await adminApi.blockUser(userId, reason);
 
-      addEvent({
-        type: 'user_blocked',
-        message: 'User blocked successfully',
-        timestamp: new Date(),
-        userId,
-      });
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to block user';
-      setError(errorMsg);
-      addEvent({
-        type: 'error',
-        message: errorMsg,
-        timestamp: new Date(),
-        userId,
-        error: err instanceof Error ? err : new Error(errorMsg),
-      });
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [addEvent]);
+      // Update users list immediately
+      setState((prev) => ({
+        ...prev,
+        users: prev.users.map((u) =>
+          u._id === userId ? { ...u, isBlocked: true, blockedReason: reason, blockedAt: new Date().toISOString() } : u
+        ),
+      }));
 
-  const unblockUser = useCallback(async (userId: string) => {
-    setLoading(true);
-    setError(null);
+      if (toastId) {
+        toastNotify.update(toastId, {
+          render: `User ${userName} blocked successfully!`,
+          type: 'success',
+          autoClose: 3000,
+        });
+      }
+
+      addEvent(createEvent('user_blocked', `User ${userName} blocked: ${reason}`, userId));
+
+      return true;
+    } catch (err) {
+      const errorMsg = handleError(err, 'blockUser', userId);
+      if (toastId) {
+        toastNotify.update(toastId, {
+          render: errorMsg,
+          type: 'error',
+          autoClose: 3000,
+        });
+      }
+      return false;
+    } finally {
+      setState((prev) => ({ ...prev, loading: false }));
+    }
+  }, [addEvent, handleError]);
+
+  /**
+   * Unblock user
+   */
+  const unblockUser = useCallback(async (userId: string, userName: string): Promise<boolean> => {
+    let toastId: string | number | null = null;
+
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+    addEvent(createEvent('unblocking_user', `Unblocking user ${userName}...`, userId));
 
     try {
-      addEvent({
-        type: 'unblocking_user',
-        message: 'Unblocking user...',
-        timestamp: new Date(),
-        userId,
-      });
+      toastId = toastNotify.loading(`Unblocking ${userName}...`, 'Processing');
 
       await adminApi.unblockUser(userId);
 
-      addEvent({
-        type: 'user_unblocked',
-        message: 'User unblocked successfully',
-        timestamp: new Date(),
-        userId,
-      });
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to unblock user';
-      setError(errorMsg);
-      addEvent({
-        type: 'error',
-        message: errorMsg,
-        timestamp: new Date(),
-        userId,
-        error: err instanceof Error ? err : new Error(errorMsg),
-      });
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [addEvent]);
+      // Update users list immediately
+      setState((prev) => ({
+        ...prev,
+        users: prev.users.map((u) =>
+          u._id === userId ? { ...u, isBlocked: false, blockedReason: undefined, blockedAt: undefined } : u
+        ),
+      }));
 
-  const resetPassword = useCallback(async (userId: string, password: string) => {
-    setLoading(true);
-    setError(null);
+      if (toastId) {
+        toastNotify.update(toastId, {
+          render: `User ${userName} unblocked successfully!`,
+          type: 'success',
+          autoClose: 3000,
+        });
+      }
+
+      addEvent(createEvent('user_unblocked', `User ${userName} unblocked successfully`, userId));
+
+      return true;
+    } catch (err) {
+      const errorMsg = handleError(err, 'unblockUser', userId);
+      if (toastId) {
+        toastNotify.update(toastId, {
+          render: errorMsg,
+          type: 'error',
+          autoClose: 3000,
+        });
+      }
+      return false;
+    } finally {
+      setState((prev) => ({ ...prev, loading: false }));
+    }
+  }, [addEvent, handleError]);
+
+  /**
+   * Reset user password
+   */
+  const resetPassword = useCallback(async (userId: string, userName: string): Promise<boolean> => {
+    let toastId: string | number | null = null;
+
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+    addEvent(createEvent('resetting_password', `Resetting password for ${userName}...`, userId));
 
     try {
-      addEvent({
-        type: 'resetting_password',
-        message: 'Resetting password...',
-        timestamp: new Date(),
-        userId,
-      });
+      toastId = toastNotify.loading(`Resetting ${userName}'s password...`, 'Processing');
 
-      await adminApi.resetUserPassword(userId, password);
+      await adminApi.resetUserPassword(userId, 'send-reset-link');
 
-      addEvent({
-        type: 'password_reset',
-        message: 'Password reset successfully',
-        timestamp: new Date(),
-        userId,
-      });
+      if (toastId) {
+        toastNotify.update(toastId, {
+          render: `Password reset link sent to ${userName}'s email!`,
+          type: 'success',
+          autoClose: 3000,
+        });
+      }
+
+      addEvent(createEvent('password_reset', `Password reset link sent to ${userName}`, userId));
+
+      return true;
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to reset password';
-      setError(errorMsg);
-      addEvent({
-        type: 'error',
-        message: errorMsg,
-        timestamp: new Date(),
-        userId,
-        error: err instanceof Error ? err : new Error(errorMsg),
-      });
-      throw err;
+      const errorMsg = handleError(err, 'resetPassword', userId);
+      if (toastId) {
+        toastNotify.update(toastId, {
+          render: errorMsg,
+          type: 'error',
+          autoClose: 3000,
+        });
+      }
+      return false;
     } finally {
-      setLoading(false);
+      setState((prev) => ({ ...prev, loading: false }));
     }
-  }, [addEvent]);
+  }, [addEvent, handleError]);
 
-  const terminateSession = useCallback(async (userId: string, sessionId: string) => {
-    setLoading(true);
-    setError(null);
+  /**
+   * Force logout user from all sessions*/
+  const forceLogout = useCallback(async (userId: string, userName: string): Promise<boolean> => {
+    let toastId: string | number | null = null;
+
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+    addEvent(createEvent('force_logout_user', `Force logging out ${userName} from all sessions...`, userId));
 
     try {
-      addEvent({
-        type: 'terminating_session',
-        message: 'Terminating session...',
-        timestamp: new Date(),
-        userId,
-      });
+      toastId = toastNotify.loading(`Logging out ${userName} from all sessions...`, 'Processing');
 
-      await adminApi.terminateSession(userId, sessionId);
+      await adminApi.forceLogoutUser(userId);
 
-      addEvent({
-        type: 'session_terminated',
-        message: 'Session terminated successfully',
-        timestamp: new Date(),
-        userId,
-      });
+      if (toastId) {
+        toastNotify.update(toastId, {
+          render: `${userName} has been logged out from all sessions!`,
+          type: 'success',
+          autoClose: 3000,
+        });
+      }
+
+      addEvent(createEvent('user_logout', `${userName} logged out from all sessions`, userId));
+
+      return true;
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to terminate session';
-      setError(errorMsg);
-      addEvent({
-        type: 'error',
-        message: errorMsg,
-        timestamp: new Date(),
-        userId,
-        error: err instanceof Error ? err : new Error(errorMsg),
-      });
-      throw err;
+      const errorMsg = handleError(err, 'forceLogout', userId);
+      if (toastId) {
+        toastNotify.update(toastId, {
+          render: errorMsg,
+          type: 'error',
+          autoClose: 3000,
+        });
+      }
+      return false;
     } finally {
-      setLoading(false);
+      setState((prev) => ({ ...prev, loading: false }));
     }
-  }, [addEvent]);
+  }, [addEvent, handleError]);
 
+
+  // UTILITY FUNCTIONS
+
+
+  /**
+   * Clear event log
+   */
   const clearEventLog = useCallback(() => {
-    setEventLog([]);
-    setError(null);
+    setState((prev) => ({
+      ...prev,
+      eventLog: [],
+      error: null,
+    }));
   }, []);
 
-  const getLatestEvent = useCallback(() => {
-    return eventLog.length > 0 ? eventLog[0] : null;
-  }, [eventLog]);
+  /**
+   * Get latest event from log
+   */
+  const getLatestEvent = useCallback((): UserEventLog | null => {
+    return state.eventLog.length > 0 ? state.eventLog[0] : null;
+  }, [state.eventLog]);
+
+  /**
+   * Clear error message
+   */
+  const clearError = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      error: null,
+    }));
+  }, []);
+
+
+  // RETURN OBJECT
+
 
   return {
-    loading,
-    error,
-    eventLog,
-    createUser,
+    // State
+    users: state.users,
+    loading: state.loading,
+    error: state.error,
+    page: state.page,
+    limit: state.limit,
+    total: state.total,
+    eventLog: state.eventLog,
+
+    // Fetch operations
+    fetchUsers,
+    refreshUsers,
+    setPage,
+    searchUsers,
+
+    // User management operations
+    addUser,
     deleteUser,
     updateUserRole,
     blockUser,
     unblockUser,
     resetPassword,
-    terminateSession,
+    forceLogout,
+
+    // Utilities
     clearEventLog,
     getLatestEvent,
+    clearError,
   };
 };

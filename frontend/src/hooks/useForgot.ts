@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as authService from '../services/authService';
 import toast from 'react-hot-toast';
-import { useLoading } from '../context/LoadingContext';
-import { useSocket } from '../context/SocketContext';
+import { useLoading } from '../context/hooks/useLoading';
+import { useSocket } from '../context/useSocket';
 
 export const useForgot = () => {
     const navigate = useNavigate();
@@ -42,3 +42,4 @@ export const useForgot = () => {
         handleSubmit,
     };
 };
+export default useForgot;

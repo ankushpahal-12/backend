@@ -72,6 +72,7 @@ export const HourglassIcon = ({ className = "w-5 h-5" }) => (
 /**
  * Get device icon component based on user agent
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export const getDeviceIcon = (userAgent: string, className = "w-5 h-5") => {
     if (userAgent.includes('Windows')) {
         return <WindowsIcon className={className} />;

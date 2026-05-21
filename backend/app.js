@@ -17,6 +17,11 @@ import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import securityRoutes from './routes/securityRoutes.js';
+import supportRoutes from './routes/supportRoutes.js';
+import adminTestRoutes from './routes/adminTestRoutes.js';
+import attemptRoutes from './routes/attemptRoutes.js';
+import emailVerificationRoutes from './routes/emailVerificationRoutes.js';
+import adminBlockRoutes from './routes/adminBlockRoutes.js';
 import globalErrorHandler from './middlewares/errorMiddleware.js';
 import { validateSignature, attachHMACSecret } from './middlewares/signatureMiddleware.js';
 import {
@@ -125,20 +130,6 @@ app.use(helmet({
     },
 }));
 
-// Health check endpoints must be BEFORE CORS to allow load balancers and internal Docker healthchecks
-// which do not send an Origin header.
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-app.get('/api/health', (req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-app.get('/api/v1/health', (req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
 const corsOptions = {
     origin: (origin, callback) => {
         // Explicitly block null origins (sent by sandboxed iframes or file:// redirects)
@@ -167,6 +158,21 @@ app.use(cors(corsOptions));
 app.options('{/*path}', cors(corsOptions));
 app.use(cookieParser());
 app.use(csrfTokenMiddleware);
+
+// Health check endpoints with CORS headers enabled
+// These must be AFTER CORS middleware to get proper CORS headers
+// They also bypass rate limiting for internal health checks
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/v1/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 // Logging - use 'dev' in development, 'combined' in production
 if (config.env === 'development') {
@@ -204,7 +210,7 @@ const loginLimiter = rateLimit({
 });
 
 // CSRF Token Endpoint Rate Limiting (lenient - users may refresh tokens frequently, security wrappers may retry)
-// ✅ Increased from 30 to 150 per minute to allow caching misses and security wrapper retries
+//Increased from 30 to 150 per minute to allow caching misses and security wrapper retries
 const csrfLimiter = rateLimit({
     max: 150,  // 150 requests per window (2.5 per second, very reasonable for CSRF token fetches)
     windowMs: 60 * 1000,  // Per minute
@@ -213,7 +219,7 @@ const csrfLimiter = rateLimit({
     legacyHeaders: false,
     keyGenerator: (req) => ipKeyGenerator(req.ip),
     skip: (req) => {
-        // ✅ Check if token is already in meta tag from initial page load
+        //  Check if token is already in meta tag from initial page load
         // This can help reduce unnecessary requests if frontend is caching properly
         return false; // For now, don't skip any requests
     }
@@ -303,7 +309,7 @@ app.delete('/api/users/:id', zeroTrustDecision, updateDeviceTrust);
 app.use('/api', continuousMonitoring);
 
 // ════════════════════════════════════════════════════════════════════════════
-// ✅ CSRF Token Endpoint (Rate Limited) - VERSIONED
+// CSRF Token Endpoint (Rate Limited) - VERSIONED
 // ════════════════════════════════════════════════════════════════════════════
 // Provides CSRF token for frontend state-changing requests
 // Rate-limited to prevent token generation attacks
@@ -341,6 +347,11 @@ app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/security', securityRoutes);
 app.use('/api/v1/devices', zeroTrustRoutes);
+app.use('/api/v1/support', supportRoutes);
+app.use('/api/v1/admin/tests', adminTestRoutes);
+app.use('/api/v1/attempt/tests', attemptRoutes);
+app.use('/api/v1/email-verification', emailVerificationRoutes);
+app.use('/api/v1/admin', adminBlockRoutes);
 
 // Legacy routes for backwards compatibility (redirects to v1)
 app.use('/api/auth', (req, res) => {

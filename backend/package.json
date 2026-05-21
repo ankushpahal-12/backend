@@ -17,6 +17,7 @@
   "dependencies": {
     "axios": "^1.13.6",
     "bcryptjs": "^3.0.3",
+    "cloudinary": "^1.41.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
@@ -31,10 +32,13 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.2.3",
     "morgan": "^1.10.1",
+    "multer": "^2.1.1",
+    "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^8.0.1",
     "qrcode": "^1.5.4",
     "socket.io": "^4.8.3",
     "speakeasy": "^2.0.0",
+    "ua-parser-js": "^2.0.9",
     "xss-clean": "^0.1.4",
     "zod": "^4.3.6"
   },

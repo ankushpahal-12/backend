@@ -53,13 +53,13 @@ const retryWithBackoff = async <T,>(
   initialDelayMs: number = 1000
 ): Promise<T> => {
   let lastError: unknown = null;
-  
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await fn();
     } catch (error) {
       lastError = error;
-      
+
       // Check if it's a 429 error and we have retries left
       if (axios.isAxiosError(error) && error.response?.status === 429 && attempt < maxRetries) {
         const delayMs = initialDelayMs * Math.pow(2, attempt);
@@ -70,7 +70,7 @@ const retryWithBackoff = async <T,>(
       }
     }
   }
-  
+
   throw lastError || new Error('Max retries exceeded');
 };
 
@@ -78,16 +78,13 @@ const retryWithBackoff = async <T,>(
 export const getAllUsers = async (page: number = 1, limit: number = 10): Promise<PaginatedUsers> => {
   return retryWithBackoff(async () => {
     const url = `${API_BASE}/users?page=${page}&limit=${limit}`;
-    console.log(`🌐 API Call: GET ${url}`);
     const response = await api.get<ApiResponse<User[]>>(url);
-    console.log(`📦 API Response:`, response.data);
     const users = response.data.data || [];
     const total = response.data.meta?.total || 0;
-    console.log(`📊 Parsed: ${users.length} users, total: ${total}`);
-    
+
     return { users, total, page, limit };
   }, 3, 1000).catch(error => {
-    console.error(`🔴 API Error in getAllUsers:`, error);
+    console.error(`API Error in getAllUsers:`, error);
     throw handleApiError(error);
   });
 };

@@ -114,6 +114,7 @@ interface APIClient {
  * const users = await secureAPI.get<User[]>('/api/users');
  * const result = await secureAPI.post('/api/transactions', { amount: 100 });
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export const secureAPI: APIClient = {
   /**
    * Make a secure API call with CSRF token and error handling
@@ -205,7 +206,7 @@ export const AppSecuritySetup: React.FC<{ children?: React.ReactNode }> = ({ chi
   useServiceWorker();
 
   // 2. Initialize CSRF Token
-  const { csrfToken, fetchWithCSRF, refreshToken } = useCSRFToken();
+  const { fetchWithCSRF } = useCSRFToken();
 
   // 3. Initialize Auto-Logout
   const {
@@ -251,7 +252,7 @@ export const AppSecuritySetup: React.FC<{ children?: React.ReactNode }> = ({ chi
       );
     };
 
-    const handleMFARequired = (event: CustomEvent<ZeroTrustEventDetail>) => {
+    const handleMFARequired = (_event: CustomEvent<ZeroTrustEventDetail>) => {
       showAlert('MFA verification required', 'info');
     };
 

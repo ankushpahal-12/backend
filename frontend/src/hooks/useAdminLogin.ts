@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import * as authService from '../services/authService';
 import { useNotification } from '../context/NotificationContext';
 import { useInteractionMetrics } from './useInteractionMetrics';
-import { useLoading } from '../context/LoadingContext';
+import { useLoading } from '../context/hooks/useLoading';
 import { useAuth } from '../context/AuthContext';
-import { useSocket } from '../context/SocketContext';
+import { useSocket } from '../context/useSocket';
 
 export const useAdminLogin = () => {
     const navigate = useNavigate();

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Menu, X, Home, Zap, DollarSign, Info, ArrowRight, ChevronDown, Sparkles, TrendingUp, BarChart3, BookOpen } from "lucide-react";
+import { Menu, X, Home, Zap, DollarSign, Info, ArrowRight, ChevronDown, Sparkles, TrendingUp, BarChart3, BookOpen, Users } from "lucide-react";
 import {
   motion,
   AnimatePresence,
@@ -113,18 +113,18 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
       href: "#features", 
       icon: Zap,
       submenu: [
-        { label: "Analytics Dashboard", icon: BarChart3, desc: "Real-time insights" },
-        { label: "Budget Tracking", icon: DollarSign, desc: "Smart budgeting" },
-        { label: "Reports", icon: TrendingUp, desc: "Detailed reports" },
-        { label: "AI Recommendations", icon: Sparkles, desc: "Smart suggestions" },
+        { label: "AI Concept Synthesis", icon: Sparkles, desc: "Notes to practice exams" },
+        { label: "Precision Testing", icon: TrendingUp, desc: "Adaptive weak domain tests" },
+        { label: "Radar Analytics", icon: BarChart3, desc: "Dynamic mastery visualization" },
+        { label: "AI doubt Solver", icon: Zap, desc: "Instant text breakdowns" },
       ]
     },
     { label: "Pricing", href: "#pricing", icon: DollarSign },
     { label: "How It Works", href: "#how-it-works", icon: Info },
     { label: "Resources", href: "#resources", icon: BookOpen, submenu: [
-      { label: "Blog", icon: BookOpen, desc: "Latest updates" },
-      { label: "Documentation", icon: BookOpen, desc: "Get help" },
-      { label: "Guides", icon: BookOpen, desc: "How-to guides" },
+      { label: "Study Guides", icon: BookOpen, desc: "Step-by-step techniques" },
+      { label: "Community", icon: Users, desc: "Learn with others" },
+      { label: "Documentation", icon: Info, desc: "How to use Aura" },
     ]},
     { label: "Contact", href: "#contact", icon: ArrowRight },
   ];

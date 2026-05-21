@@ -44,9 +44,8 @@ export const DynamicBackground: React.FC<DynamicBackgroundProps> = ({ className 
     }
 
     const animate = () => {
-      // Clear canvas with fade effect
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.1)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Clear canvas cleanly to support transparency in both Light and Dark themes
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Update and draw particles
       particles.forEach((particle) => {

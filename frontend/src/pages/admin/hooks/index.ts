@@ -1,22 +1,15 @@
-// Legacy hooks (still available)
-export { useUserManagement, type UserEvent, type UserEventLog } from './useUserManagement';
+// Main consolidated hook for all user management operations
+export { useUserManagement, type UserEvent, type UserEventLog, type User } from './useUserManagement';
+
+// Global hook - Modal logic for all user actions
+export { useUserGlobal, type UserActionType } from './useUserGlobal';
+
+// Supporting hooks
 export { useToast } from './useToast';
-
-// New specialized hooks for separate logic
-export { useFetchUsers } from './useFetchUsers';
-export type { User } from './useFetchUsers';
-
-export { useAddUser } from './useAddUser';
-
-export { useDeleteUser } from './useDeleteUser';
-
-export { useChangeRole } from './useChangeRole';
-
-export { useBanUser, useUnblockUser } from './useBanUser';
-
-export { useResetPassword, useForceLogout } from './useResetPassword';
-
-// Email verification hooks
 export { useVerifyEmailOTP } from './useVerifyEmailOTP';
-
 export { useSetPassword } from './useSetPassword';
+export { useAdminAuth } from './useAdminAuth';
+export { useAdminSupport } from './useAdminSupport';
+export { useSessions } from './useSessions';
+export { useLogs } from './useLogs';
+export { useSecurityEvents } from './useSecurityEvents';

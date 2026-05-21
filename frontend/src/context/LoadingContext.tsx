@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
-import { useSocket } from './SocketContext';
-import type { ServerLoad } from './SocketContext';
+import React, { createContext, useState, useCallback, useRef, useEffect } from 'react';
+import { useSocket } from './useSocket';
+import type { ServerLoad } from './SocketContextDef';
 
 type LoadingType = 'login' | 'register' | 'sync' | 'general' | 'verifying' | 'web3' | 'google';
 
@@ -16,6 +16,10 @@ interface LoadingContextType {
 }
 
 const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
+
+export { LoadingContext };
+
+
 
 // Each loading type has a known number of backend steps; used to compute progress %
 const STEP_COUNTS: Record<LoadingType, number> = {
@@ -39,10 +43,17 @@ export const LoadingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const stepRef = useRef(0);
     const loadingTypeRef = useRef<LoadingType>('general');
-
-    // Mirror socket serverLoad into context state
+    // Track mounted state and sync socket serverLoad without cascading renders
+    const isMountedRef = useRef(true);
     useEffect(() => {
-        if (socketServerLoad) {
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
+
+    // Mirror socket serverLoad into context state via callback
+    useEffect(() => {
+        if (socketServerLoad && isMountedRef.current) {
             setServerLoad(socketServerLoad);
         }
     }, [socketServerLoad]);
@@ -115,11 +126,5 @@ export const LoadingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     );
 };
 
-// eslint-disable-next-line react-refresh/only-export-components
-export const useLoading = () => {
-    const context = useContext(LoadingContext);
-    if (!context) {
-        throw new Error('useLoading must be used within a LoadingProvider');
-    }
-    return context;
-};
+export type { LoadingContextType }; 
+

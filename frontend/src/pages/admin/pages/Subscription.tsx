@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Sidebar from '../../../components/layouts/SideBar';
 import OverviewTab from '../components/Subscription/overview/OverviewTab';
 import PlansTab from '../components/Subscription/plans/PlansTab';
 import SubscriptionsTab from '../components/Subscription/subscriptions/SubscriptionsTab';
@@ -20,6 +21,7 @@ const tabs = [
 const SubscriptionPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [modalOpen, setModalOpen] = useState(false);
+  const sidebarWidth = 248;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -27,8 +29,10 @@ const SubscriptionPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 md:p-8 min-h-screen bg-[#f4f6fb]">
-      <div className="w-full space-y-6">
+    <div className="min-h-screen bg-[#f4f6fb]">
+      <Sidebar open onClose={() => undefined} width={sidebarWidth} />
+      <div className="p-4 md:p-8 ml-0 lg:ml-[248px] transition-all duration-300">
+        <div className="w-full space-y-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col space-y-1">
             <h1 className="text-[28px] md:text-[34px] font-[800] text-gray-900 tracking-tight">Subscription Management</h1>
@@ -98,6 +102,7 @@ const SubscriptionPage: React.FC = () => {
           </div>
         </div>
       </SmoothModal>
+      </div>
     </div>
   );
 };

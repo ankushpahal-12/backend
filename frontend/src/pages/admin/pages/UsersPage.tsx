@@ -1,5 +1,5 @@
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import {
 	Box,
 	Paper,
@@ -21,17 +21,14 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { motion } from 'framer-motion';
 import Sidebar from '../../../components/layouts/SideBar';
-import AddUserModal from '../components/users/AddUserModal';
-import DeleteUserModal from '../components/users/DeleteUserModal';
-import ChangeRoleModal from '../components/users/ChangeRoleModal';
-import BanUserModal from '../components/users/BanUserModal';
-import UnblockUserModal from '../components/users/UnblockUserModal';
-import ResetPasswordModal from '../components/users/ResetPasswordModal';
-import ForceLogoutModal from '../components/users/ForceLogoutModal';
+
+
+import UserActionModal, { type UserActionType } from '../components/users/UserActionModal';
+
 import EmailVerificationModal from '../components/users/EmailVerificationModal';
 import UserDetails from '../components/users/UserDetails';
 import UserTable from '../components/users/UserTable';
-import { useFetchUsers, type User } from '../hooks/useFetchUsers';
+import { useUserManagement, type User } from '../hooks/useUserManagement';
 import {
 	Add,
 	Search,
@@ -48,12 +45,15 @@ import {
 const UsersPage = () => {
 	const sidebarWidth = 248;
 
-	// Fetch real users from backend
+	// ============================================================
+	// CONSOLIDATED HOOK - All user operations in one hook
+	// ============================================================
 	const {
 		users,
+		fetchUsers,
 		refreshUsers,
 		searchUsers,
-	} = useFetchUsers();
+	} = useUserManagement();
 
 	// State for UI
 	const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -63,17 +63,34 @@ const UsersPage = () => {
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 
-	// Modal states
-	const [addUserOpen, setAddUserOpen] = useState(false);
-	const [deleteOpen, setDeleteOpen] = useState(false);
-	const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
-	const [forceLogoutOpen, setForceLogoutOpen] = useState(false);
-	const [changeRoleOpen, setChangeRoleOpen] = useState(false);
-	const [banOpen, setBanOpen] = useState(false);
-	const [unblockOpen, setUnblockOpen] = useState(false);
+	// Modal states — single unified modal
+	const [modalOpen, setModalOpen] = useState(false);
+	const [modalType, setModalType] = useState<UserActionType>('add-user');
 	const [emailVerificationOpen, setEmailVerificationOpen] = useState(false);
 	const [userDetailsOpen, setUserDetailsOpen] = useState(false);
 	const [newUserEmail, setNewUserEmail] = useState<string>('');
+
+	// Helper to open the unified modal
+	const openModal = useCallback((type: UserActionType, user?: User) => {
+		if (user) setSelectedUser(user);
+		setModalType(type);
+		setModalOpen(true);
+	}, []);
+
+	// ============================================================
+	// LOAD USERS ON MOUNT
+	// ============================================================
+	useEffect(() => {
+		console.log('UsersPage mounted - loading users');
+		const loadUsers = async () => {
+			try {
+				await fetchUsers(0, 10);
+			} catch (err) {
+				console.error('Failed to load users:', err);
+			}
+		};
+		loadUsers();
+	}, [fetchUsers]);
 
 	// Filter and search users
 	const filteredUsers = useMemo(() => {
@@ -136,50 +153,29 @@ const UsersPage = () => {
 	}, [paginatedUsers]);
 
 	// Modal handlers
-	const handleUserCreated = useCallback((email: string) => {
-		setNewUserEmail(email);
-		setEmailVerificationOpen(true);
+	const handleModalSuccess = useCallback((data?: Record<string, string>) => {
+		if (modalType === 'add-user' && data?.email) {
+			setNewUserEmail(data.email);
+			setEmailVerificationOpen(true);
+		}
 		refreshUsers();
-	}, [refreshUsers]);
+	}, [modalType, refreshUsers]);
 
-	const handleDelete = useCallback((user: User) => {
-		setSelectedUser(user);
-		setDeleteOpen(true);
-	}, []);
-
-	const handleResetPassword = useCallback((user: User) => {
-		setSelectedUser(user);
-		setResetPasswordOpen(true);
-	}, []);
-
-	const handleForceLogout = useCallback((user: User) => {
-		setSelectedUser(user);
-		setForceLogoutOpen(true);
-	}, []);
-
-	const handleChangeRole = useCallback((user: User) => {
-		setSelectedUser(user);
-		setChangeRoleOpen(true);
-	}, []);
+	const handleDelete = useCallback((user: User) => openModal('delete-user', user), [openModal]);
+	const handleResetPassword = useCallback((user: User) => openModal('reset-user-password', user), [openModal]);
+	const handleForceLogout = useCallback((user: User) => openModal('force-logout-user', user), [openModal]);
+	const handleChangeRole = useCallback((user: User) => openModal('change-user-role', user), [openModal]);
 
 	const handleToggleBlock = useCallback((user: User) => {
-		setSelectedUser(user);
-		if (user.isBlocked) {
-			setUnblockOpen(true);
-		} else {
-			setBanOpen(true);
-		}
-	}, []);
+		openModal(user.isBlocked ? 'unblock-user' : 'block-user', user);
+	}, [openModal]);
 
 	const handleView = useCallback((user: User) => {
 		setSelectedUser(user);
 		setUserDetailsOpen(true);
 	}, []);
 
-	const handleEdit = useCallback((user: User) => {
-		setSelectedUser(user);
-		setUserDetailsOpen(true);
-	}, []);
+	const handleEdit = useCallback((user: User) => openModal('edit-user', user), [openModal]);
 
 	const handleViewLogs = useCallback((user: User) => {
 		console.log('View logs for user:', user);
@@ -336,7 +332,7 @@ const UsersPage = () => {
 
 								<Stack direction="row" spacing={1.25} alignItems="center">
 									<Button variant="outlined" startIcon={<Download />} sx={{ textTransform: 'none', borderRadius: 2, minWidth: 120 }}>Export</Button>
-									<Button variant="contained" startIcon={<Add />} onClick={() => setAddUserOpen(true)} sx={{ textTransform: 'none', borderRadius: 2, px: 2.5, boxShadow: 'none' }}>
+									<Button variant="contained" startIcon={<Add />} onClick={() => openModal('add-user')} sx={{ textTransform: 'none', borderRadius: 2, px: 2.5, boxShadow: 'none' }}>
 										Add User
 									</Button>
 								</Stack>
@@ -407,14 +403,13 @@ const UsersPage = () => {
 				</Stack>
 			</Box>
 
-			<AddUserModal open={addUserOpen} onClose={() => setAddUserOpen(false)} onUserCreated={handleUserCreated} />
-
-			<ResetPasswordModal open={resetPasswordOpen} user={selectedUser} onClose={() => setResetPasswordOpen(false)} onPasswordReset={handleRefresh} />
-			<ForceLogoutModal open={forceLogoutOpen} user={selectedUser} onClose={() => setForceLogoutOpen(false)} onSessionTerminated={handleRefresh} />
-			<ChangeRoleModal open={changeRoleOpen} user={selectedUser} onClose={() => setChangeRoleOpen(false)} onRoleChanged={handleRefresh} />
-			<BanUserModal open={banOpen} user={selectedUser} onClose={() => setBanOpen(false)} onUserBlocked={handleRefresh} />
-			<UnblockUserModal open={unblockOpen} user={selectedUser} onClose={() => setUnblockOpen(false)} onUserUnblocked={handleRefresh} />
-			<DeleteUserModal open={deleteOpen} user={selectedUser} onClose={() => setDeleteOpen(false)} onUserDeleted={handleRefresh} />
+			<UserActionModal
+				open={modalOpen}
+				onClose={() => setModalOpen(false)}
+				type={modalType}
+				user={selectedUser}
+				onSuccess={handleModalSuccess}
+			/>
 
 			<EmailVerificationModal 
 				open={emailVerificationOpen} 

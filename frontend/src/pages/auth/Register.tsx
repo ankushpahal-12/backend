@@ -27,15 +27,16 @@ import {
     Security,
     KeyboardBackspace
 } from '@mui/icons-material';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import React from 'react';
 import AuthLayout from '../../components/auth/AuthLayout';
 import Button from '../../components/ui/Button';
+import Loader from '../admin/components/ui/NetworkLoader';
 import TelemetryNode from '../../components/common/TelemetryNode';
 import PasswordStrengthMeter from '../../components/auth/PasswordStrengthMeter';
-import { useSignup } from '../../hooks/useSignup';
+import { useSignup } from '../../hooks/useUserSignGlobal';
 import { useThemeContext } from '../../context/ThemeContext';
 import { initAuthSession } from '../../services/authService';
 import toast from 'react-hot-toast';
@@ -171,7 +172,6 @@ const Register = () => {
         authMethod, setAuthMethod,
         showPassword,
         isBreached,
-        isCheckingBreach,
         honeypot, setHoneypot,
         termsAccepted, setTermsAccepted,
         formData,
@@ -520,37 +520,43 @@ const Register = () => {
                                                 }
                                             />
 
-                                            <Button
-                                                size="medium"
-                                                type="submit"
-                                                variant="contained"
-                                                disabled={isLoading || isBreached || isEmailRegistered || !termsAccepted}
-                                                startIcon={<PersonAdd sx={{ fontSize: 18 }} />}
-                                                sx={{
-                                                    py: 1.2,
-                                                    px: 4,
-                                                    borderRadius: 2,
-                                                    fontWeight: 900,
-                                                    fontSize: '0.85rem',
-                                                    textTransform: 'none',
-                                                    background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
-                                                    boxShadow: `0 8px 16px ${alpha('#6366F1', 0.25)}`,
-                                                    '&:hover': {
-                                                        background: 'linear-gradient(135deg, #4F46E5 0%, #3730A3 100%)',
-                                                        transform: 'translateY(-1px)',
-                                                        boxShadow: `0 12px 20px ${alpha('#6366F1', 0.35)}`
-                                                    },
-                                                    transition: 'all 0.2s ease',
-                                                    marginLeft: 'auto',
-                                                    marginRight: 'auto',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: 0.8,
-                                                    mt: -4
-                                                }}
-                                            >
-                                                {isLoading ? 'Processing...' : 'Signup'}
-                                            </Button>
+                                            {isLoading ? (
+                                                <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                                                    <Loader status="loading" message="Processing..." showDetails={false} />
+                                                </Box>
+                                            ) : (
+                                                <Button
+                                                    size="medium"
+                                                    type="submit"
+                                                    variant="contained"
+                                                    disabled={isLoading || isBreached || isEmailRegistered || !termsAccepted}
+                                                    startIcon={<PersonAdd sx={{ fontSize: 18 }} />}
+                                                    sx={{
+                                                        py: 1.2,
+                                                        px: 4,
+                                                        borderRadius: 2,
+                                                        fontWeight: 900,
+                                                        fontSize: '0.85rem',
+                                                        textTransform: 'none',
+                                                        background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
+                                                        boxShadow: `0 8px 16px ${alpha('#6366F1', 0.25)}`,
+                                                        '&:hover': {
+                                                            background: 'linear-gradient(135deg, #4F46E5 0%, #3730A3 100%)',
+                                                            transform: 'translateY(-1px)',
+                                                            boxShadow: `0 12px 20px ${alpha('#6366F1', 0.35)}`
+                                                        },
+                                                        transition: 'all 0.2s ease',
+                                                        marginLeft: 'auto',
+                                                        marginRight: 'auto',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: 0.8,
+                                                        mt: -4
+                                                    }}
+                                                >
+                                                    Signup
+                                                </Button>
+                                            )}
 
                                             <Divider sx={{ borderColor: isLightMode ? alpha('#1E293B', 0.12) : alpha('#FFF', 0.05), my: 2, display: authMethod === 'email' ? 'none' : 'block' }}>
                                                 <Typography variant="caption" color={isLightMode ? 'rgba(15,23,42,0.4)' : 'rgba(255,255,255,0.4)'} sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: 2, fontSize: '0.65rem' }}>or</Typography>

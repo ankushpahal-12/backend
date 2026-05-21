@@ -11,19 +11,31 @@ import {
     Moon,
     Sun,
     PanelLeftClose,
-    ChevronDown
+    ChevronDown,
+    FileText
 } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useThemeContext } from '../../context/ThemeContext';
 import { Note } from '@mui/icons-material';
-import { iconButtonClasses } from '@mui/material';
 
 interface SideBarProps {
     open: boolean;
     onClose: () => void;
     width: number;
+}
+
+interface SubmenuItem {
+    text: string;
+    path: string;
+}
+
+interface NavItem {
+    text: string;
+    icon: React.ComponentType<{ size?: number | string; strokeWidth?: number | string; className?: string }>;
+    path: string;
+    submenu?: SubmenuItem[];
 }
 
 const SideBar: React.FC<SideBarProps> = ({ open, onClose, width }) => {
@@ -35,35 +47,35 @@ const SideBar: React.FC<SideBarProps> = ({ open, onClose, width }) => {
 
     const isAdmin = location.pathname.startsWith('/admin');
 
-    const navItems = isAdmin ? [
-        { text: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard-public' },
+    const navItems: NavItem[] = isAdmin ? [
+        { text: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
         { text: 'User Management', icon: User, path: '/admin/users' },
-        { text: "Sessions", icon: User, path:'/admin/sessions'},
-        { text: "System Logs", icon : BarChart3, path: '/admin/logs' },
+        { text: 'Security', icon: Settings, path: '/admin/security' },
+        { text: 'Settings', icon: Settings, path: '/admin/settings' },
+        { text: 'Subscriptions', icon: CreditCard, path: '/admin/subscriptions' },
+        { text: 'Support Tickets', icon: BookOpen, path: '/admin/support/tickets' },
         { 
-            text: "Tests", 
-            icon: Note, 
+            text: 'Tests', 
+            icon: FileText, 
             path: '/admin/tests',
             submenu: [
-                { text: 'All test', path: '/admin/tests' },
-                { text: 'Draft test', path: '/admin/tests/draft' },
-                { text: 'Create test', path: '/admin/tests/create' },
+                { text: 'All Tests', path: '/admin/tests' },
+                { text: 'Create Test', path: '/admin/tests/create' },
+                { text: 'Question Bank', path: '/admin/tests/question-bank' },
+                { text: 'Categories', path: '/admin/tests/categories' },
+                { text: 'Analytics', path: '/admin/tests/analytics' },
             ]
         },
-        { text: 'Financial Audit', icon: BookOpen, path: '/admin/audit' },
-        { text: "Subscription Management ", icon: CreditCard, path: '/admin/subscriptions'},
-        { text: 'Profile Settings', icon: User, path: '/admin/profile' },
-
-        { text: 'System Settings', icon: Settings, path: '/admin/security-public' },
     ] : [
-        { text: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-        { text: 'Practice', icon: BookOpen, path: '/practice' },
-        { text: 'Notes', icon: Note, path: '/notes'},
-        { text: 'Analytics', icon: BarChart3, path: '/analytics' },
-        { text: 'AI Insights', icon: Sparkles, path: '/ai-insights' },
-        { text: 'Pricing', icon: CreditCard, path: '/pricing' },
-        { text: 'Profile', icon: User, path: '/profile' },
-        { text: 'Settings', icon: Settings, path: '/settings' },
+        { text: 'Dashboard', icon: LayoutDashboard, path: '/user/dashboard' },
+        { text: 'Practice', icon: BookOpen, path: '/user/practice' },
+        { text: 'Notes', icon: Note, path: '/user/notes'},
+        { text: 'Analytics', icon: BarChart3, path: '/user/analytics' },
+        { text: 'AI Insights', icon: Sparkles, path: '/user/ai-insights' },
+        { text: 'Pricing', icon: CreditCard, path: '/user/pricing' },
+        { text: 'Support', icon: BookOpen, path: '/user/support' },
+        { text: 'Profile', icon: User, path: '/user/profile' },
+        { text: 'Settings', icon: Settings, path: '/user/settings' },
     ];
 
     const handleLogout = async () => {
@@ -130,7 +142,7 @@ const SideBar: React.FC<SideBarProps> = ({ open, onClose, width }) => {
 
                 {/* Navigation Section */}
                 <nav className="relative flex-1 px-2 overflow-y-auto space-y-1 py-3">
-                    {navItems.map((item: any) => {
+                    {navItems.map((item) => {
                         const Icon = item.icon;
                         const active = location.pathname === item.path;
                         const hasSubmenu = item.submenu && item.submenu.length > 0;
@@ -175,7 +187,7 @@ const SideBar: React.FC<SideBarProps> = ({ open, onClose, width }) => {
                                                 transition={{ duration: 0.3, ease: "easeInOut" }}
                                                 className="overflow-hidden pl-11 space-y-1"
                                             >
-                                                {item.submenu.map((subItem: any) => {
+                                                {item.submenu?.map((subItem) => {
                                                     const subActive = location.pathname === subItem.path;
                                                     return (
                                                         <Link

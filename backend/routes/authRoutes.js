@@ -86,8 +86,14 @@ const adminLoginLimit = buildLimiter(
     'Too many admin login attempts. Please wait before retrying.'
 );
 
-// Pre-auth session initialization (no rate-limit on this — it's a lightweight operation)
-router.post('/init-session', authLimit, initSession);
+// Pre-auth session initialization (lenient rate-limit — lightweight operation called frequently)
+// Allow 100 requests per minute (1.67/sec) to accommodate navigation buttons and retries
+const sessionInitLimit = buildLimiter(
+    60 * 1000,  // 1 minute window
+    100,        // 100 requests per minute
+    'Too many session initialization requests. Please try again in a moment.'
+);
+router.post('/init-session', sessionInitLimit, initSession);
 
 // Routes
 router.post('/register', loginLimit, detectBot, validateSessionId, validateSchema(registerSchema), authController.register);

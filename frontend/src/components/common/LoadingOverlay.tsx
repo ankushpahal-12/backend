@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Backdrop, alpha, useTheme, LinearProgress } from '@mui/material';
-import { useLoading } from '../../context/LoadingContext';
-import { useSocket } from '../../context/SocketContext';
+import { useLoading } from '../../context/hooks/useLoading';
+import { useSocket } from '../../context/useSocket';
 import type { SignalStrength } from '../../context/SocketContext';
 
 // ── Signal bars component ──────────────────────────────────────────────────────
@@ -88,6 +88,10 @@ const LoadingOverlay: React.FC = () => {
     const { isLoading, loadingText, progress, serverLoad } = useLoading();
     const { isConnected, latencyMs, signalStrength } = useSocket();
 
+    // Hide entire overlay on auth and admin pages - they have their own loaders
+    const isAuthOrAdminPage = /^\/(login|register|forgot-password|verify-email|admin-login|admin\/|auth\/)/i.test(window.location.pathname);
+    const shouldShowOverlay = isLoading && !isAuthOrAdminPage;
+
     return (
         <Backdrop
             sx={{
@@ -101,7 +105,7 @@ const LoadingOverlay: React.FC = () => {
                 backdropFilter: 'blur(12px)',
                 transition: 'all 0.4s ease'
             }}
-            open={isLoading}
+            open={shouldShowOverlay}
         >
             {/* ── Central glow orb ── */}
             <Box sx={{ position: 'relative', width: 100, height: 100, mb: 3 }}>
@@ -178,36 +182,38 @@ const LoadingOverlay: React.FC = () => {
             </Box>
 
             {/* ── Signal + connectivity row ── */}
-            <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1.5,
-                px: 2,
-                py: 0.8,
-                bgcolor: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.07)',
-                borderRadius: '40px',
-                mb: 1.5,
-            }}>
-                {/* Connection dot */}
+            {!isAuthOrAdminPage && (
                 <Box sx={{
-                    width: 7, height: 7, borderRadius: '50%',
-                    bgcolor: isConnected ? '#10B981' : '#EF4444',
-                    boxShadow: isConnected ? '0 0 8px #10B981' : '0 0 8px #EF4444',
-                    animation: isConnected ? 'pulse 2s ease-in-out infinite' : 'none',
-                    flexShrink: 0,
-                }} />
-                <Typography sx={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>
-                    {isConnected ? 'CONNECTED' : 'OFFLINE'}
-                </Typography>
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    px: 2,
+                    py: 0.8,
+                    bgcolor: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.07)',
+                    borderRadius: '40px',
+                    mb: 1.5,
+                }}>
+                    {/* Connection dot */}
+                    <Box sx={{
+                        width: 7, height: 7, borderRadius: '50%',
+                        bgcolor: isConnected ? '#10B981' : '#EF4444',
+                        boxShadow: isConnected ? '0 0 8px #10B981' : '0 0 8px #EF4444',
+                        animation: isConnected ? 'pulse 2s ease-in-out infinite' : 'none',
+                        flexShrink: 0,
+                    }} />
+                    <Typography sx={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>
+                        {isConnected ? 'CONNECTED' : 'OFFLINE'}
+                    </Typography>
 
-                <Box sx={{ width: '1px', height: 12, bgcolor: 'rgba(255,255,255,0.1)' }} />
+                    <Box sx={{ width: '1px', height: 12, bgcolor: 'rgba(255,255,255,0.1)' }} />
 
-                <SignalBars strength={signalStrength} latencyMs={latencyMs} />
-            </Box>
+                    <SignalBars strength={signalStrength} latencyMs={latencyMs} />
+                </Box>
+            )}
 
-            {/* ── Server load row (only when real data present) ── */}
-            {serverLoad && (
+            {/* ── Server load row (only when real data present and not on auth/admin page) ── */}
+            {!isAuthOrAdminPage && serverLoad && (
                 <ServerLoadChip
                     cpu={serverLoad.cpuUsagePercent}
                     freeMemMb={serverLoad.freeMemMb}

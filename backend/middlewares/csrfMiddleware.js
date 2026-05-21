@@ -118,6 +118,11 @@ function validateCSRFToken(req, res, next) {
     '/api/v1/auth/verify-email-and-set-password',
     '/api/v1/admin/verify-email-otp',
     '/api/v1/admin/set-password',
+    // Email verification endpoints for private test access (public)
+    '/api/v1/email-verification/send-otp',
+    '/api/v1/email-verification/verify-otp',
+    '/api/v1/email-verification/resend-otp',
+    '/api/v1/email-verification/status',
     // Beacon-only telemetry endpoint: navigator.sendBeacon() cannot send custom
     // headers, so X-CSRF-Token can never be attached. This endpoint is a
     // write-only security event sink — already rate-limited (30 req/min/IP) —

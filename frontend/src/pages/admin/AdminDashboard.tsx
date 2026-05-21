@@ -18,11 +18,10 @@ import {
     Shield
 } from '@mui/icons-material';
 import MainLayout from '../../components/layouts/MainLayout';
-import { useLoading } from '../../context/LoadingContext';
+import { useLoading } from '../../context/hooks/useLoading';
 import { useEffect, useState } from 'react';
 import * as dataService from '../../services/dataService';
-import SecurityMonitoring from '../../components/admin/SecurityMonitoring';
-
+import SecurityMonitoring  from './security/SecurityMonitoring';
 const AdminDashboard = () => {
     const theme = useTheme();
     const { startLoading, stopLoading } = useLoading();

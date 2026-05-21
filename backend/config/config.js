@@ -61,7 +61,8 @@ const config = {
             'Authorization',
             'X-Requested-With',
             'X-CSRF-Token',
-            'X-Body-Signature'
+            'X-Body-Signature',
+            'x-session-id'
         ]),
         exposedHeaders: parseCsv(process.env.CORS_EXPOSED_HEADERS, ['RateLimit-Limit', 'RateLimit-Remaining', 'RateLimit-Reset']),
         maxAge: Number(process.env.CORS_MAX_AGE || 86400)

@@ -27,14 +27,16 @@ import {
     VerifiedUser,
     Hub
 } from '@mui/icons-material';
-import { Link as RouterLink, useSearchParams } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import AuthLayout from '../../components/auth/AuthLayout';
 import Button from '../../components/ui/Button';
 import TelemetryNode from '../../components/common/TelemetryNode';
+import NetworkLoader from '../../pages/admin/components/ui/NetworkLoader';
 import ConcurrentSessionModal from '../../components/auth/ConcurrentSessionModal';
-import { useLogin } from '../../hooks/useLogin';
+import { useLogin } from '../../hooks/useUserSignGlobal';
 import { useThemeContext } from '../../context/ThemeContext';
 import { initAuthSession } from '../../services/authService';
 import toast from 'react-hot-toast';
@@ -218,8 +220,7 @@ const Login = () => {
     const { mode } = useThemeContext();
     const isLightMode = mode === 'light';
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const currentSid = searchParams.get('sid') || '';
+    const [networkError, setNetworkError] = useState<'network' | 'server' | null>(null);
 
     const goToRegister = async () => {
         try {
@@ -247,13 +248,73 @@ const Login = () => {
         isLoading,
         preventDefault,
         handleClickShowPassword,
-        handleCredentialsSubmit,
-        handleForceLogin,
-        handleOTPSubmit,
-        handleTOTPSubmit,
+        handleCredentialsSubmit: originalHandleCredentialsSubmit,
+        handleForceLogin: originalHandleForceLogin,
+        handleOTPSubmit: originalHandleOTPSubmit,
+        handleTOTPSubmit: originalHandleTOTPSubmit,
         handleGoogleLoginSuccess,
         handleGoogleLoginError,
     } = useLogin();
+
+    const handleCredentialsSubmit = async (e: React.FormEvent) => {
+        setNetworkError(null);
+        try {
+            await originalHandleCredentialsSubmit(e);
+        } catch (err: unknown) {
+            const error = err as { response?: { status?: number } };
+            if (!error.response) {
+                setNetworkError('network');
+            } else if (typeof error.response.status === 'number' && error.response.status >= 500) {
+                setNetworkError('server');
+            }
+        }
+    };
+
+    const handleForceLogin = async () => {
+        setNetworkError(null);
+        try {
+            await originalHandleForceLogin();
+        } catch (err: unknown) {
+            const error = err as { response?: { status?: number } };
+            if (!error.response) {
+                setNetworkError('network');
+            } else if (typeof error.response.status === 'number' && error.response.status >= 500) {
+                setNetworkError('server');
+            }
+        }
+    };
+
+    const handleOTPSubmit = async (e: React.FormEvent) => {
+        setNetworkError(null);
+        try {
+            await originalHandleOTPSubmit(e);
+        } catch (err: unknown) {
+            const error = err as { response?: { status?: number } };
+            if (!error.response) {
+                setNetworkError('network');
+            } else if (typeof error.response.status === 'number' && error.response.status >= 500) {
+                setNetworkError('server');
+            }
+        }
+    };
+
+    const handleTOTPSubmit = async (e: React.FormEvent) => {
+        setNetworkError(null);
+        try {
+            await originalHandleTOTPSubmit(e);
+        } catch (err: unknown) {
+            const error = err as { response?: { status?: number } };
+            if (!error.response) {
+                setNetworkError('network');
+            } else if (typeof error.response.status === 'number' && error.response.status >= 500) {
+                setNetworkError('server');
+            }
+        }
+    };
+
+    const handleRetry = () => {
+        setNetworkError(null);
+    };
 
     const containerVariants = {
         hidden: { opacity: 0, y: 20 },
@@ -281,6 +342,25 @@ const Login = () => {
     return (
         <AuthLayout>
             <TelemetryNode title="Login" description="Matrix Portal Sync" />
+            
+            {networkError && (
+                <NetworkLoader
+                    status={networkError === 'network' ? 'network-unavailable' : 'server-unavailable'}
+                    message={networkError === 'network' ? 'Unable to connect to the network. Please check your connection.' : 'The authentication server is currently unavailable. Please try again later.'}
+                    onRetry={handleRetry}
+                    showDetails={true}
+                />
+            )}
+
+            {isLoading && !networkError && (
+                <NetworkLoader
+                    status="loading"
+                    message="Authenticating your credentials..."
+                    showDetails={false}
+                />
+            )}
+
+            {!networkError && !isLoading && (
             <motion.div
                 initial="hidden"
                 animate="visible"
@@ -527,16 +607,16 @@ const Login = () => {
                                                                 sx={{
                                                                     py: 2,
                                                                     borderRadius: 2,
-                                                                    fontWeight: 900,
-                                                                    fontSize: { xs: '0.9rem', sm: '1rem' },
-                                                                    textTransform: 'none',
-                                                                    background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
-                                                                    boxShadow: `0 8px 16px ${alpha('#6366F1', 0.25)}`,
-                                                                    transition: 'all 0.2s ease'
-                                                                }}
-                                                            >
-                                                                {isLoading ? 'Processing...' : 'Login'}
-                                                            </Button>
+                                                                        fontWeight: 900,
+                                                                        fontSize: { xs: '0.9rem', sm: '1rem' },
+                                                                        textTransform: 'none',
+                                                                        background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
+                                                                        boxShadow: `0 8px 16px ${alpha('#6366F1', 0.25)}`,
+                                                                        transition: 'all 0.2s ease'
+                                                                    }}
+                                                                >
+                                                                    Login
+                                                                </Button>
                                                         </motion.div>
 
                                                         <motion.div variants={itemVariants} style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
@@ -623,16 +703,22 @@ const Login = () => {
                                                         />
 
                                                         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                                                            <Button
-                                                                fullWidth
-                                                                size="large"
-                                                                type="submit"
-                                                                variant="contained"
-                                                                disabled={isLoading || otp.length < 6}
-                                                                sx={{ py: 2.5, borderRadius: 3, fontWeight: 900, fontSize: '1.1rem' }}
-                                                            >
-                                                                {isLoading ? 'Verifying...' : 'Finalize Sync'}
-                                                            </Button>
+                                                            {isLoading ? (
+                                                                <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                                                                    <NetworkLoader status="loading" message="Verifying..." showDetails={false} />
+                                                                </Box>
+                                                            ) : (
+                                                                <Button
+                                                                    fullWidth
+                                                                    size="large"
+                                                                    type="submit"
+                                                                    variant="contained"
+                                                                    disabled={isLoading || otp.length < 6}
+                                                                    sx={{ py: 2.5, borderRadius: 3, fontWeight: 900, fontSize: '1.1rem' }}
+                                                                >
+                                                                    Finalize Sync
+                                                                </Button>
+                                                            )}
                                                         </motion.div>
 
                                                         <Box sx={{ textAlign: 'center' }}>
@@ -694,17 +780,23 @@ const Login = () => {
                                                         />
 
                                                         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                                                            <Button
-                                                                fullWidth size="large" type="submit" variant="contained"
-                                                                disabled={isLoading || totpCode.length < 6}
-                                                                sx={{
-                                                                    py: 2.5, borderRadius: 3, fontWeight: 900, fontSize: '1.1rem',
-                                                                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                                                                    boxShadow: `0 8px 16px ${alpha('#10B981', 0.25)}`,
-                                                                }}
-                                                            >
-                                                                {isLoading ? 'Verifying...' : 'Verify Code'}
-                                                            </Button>
+                                                            {isLoading ? (
+                                                                <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                                                                    <NetworkLoader status="loading" message="Verifying..." showDetails={false} />
+                                                                </Box>
+                                                            ) : (
+                                                                <Button
+                                                                    fullWidth size="large" type="submit" variant="contained"
+                                                                    disabled={isLoading || totpCode.length < 6}
+                                                                    sx={{
+                                                                        py: 2.5, borderRadius: 3, fontWeight: 900, fontSize: '1.1rem',
+                                                                        background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                                                                        boxShadow: `0 8px 16px ${alpha('#10B981', 0.25)}`,
+                                                                    }}
+                                                                >
+                                                                    Verify Code
+                                                                </Button>
+                                                            )}
                                                         </motion.div>
 
                                                         <Box sx={{ textAlign: 'center' }}>
@@ -728,6 +820,7 @@ const Login = () => {
                 </Grid>
                 </Paper>
             </motion.div>
+            )}
 
             <ConcurrentSessionModal
                 open={conflictOpen}

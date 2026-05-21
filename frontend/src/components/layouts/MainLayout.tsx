@@ -24,12 +24,6 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    useEffect(() => {
-        if (!isLargeScreen) {
-            setSidebarOpen(false);
-        }
-    }, [isLargeScreen]);
-
     return (
         <div className={`min-h-screen flex font-sans selection:bg-indigo-500/30 transition-colors duration-300 ${
             isLightMode

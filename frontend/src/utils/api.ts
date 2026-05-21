@@ -1,5 +1,7 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { ENV } from '../config/env';
+import { isLikelyOfflineError } from '../system/network/utils/network.utils';
+import { enqueueRetryRequest, type RetryMethod } from '../system/network/services/retryQueue.service';
 
 const CSRF_TOKEN_STORAGE_KEY = 'csrf-token';
 const CSRF_REFRESH_STORAGE_KEY = 'csrf-token-refresh';
@@ -59,20 +61,17 @@ let csrfTokenInitialized = false;
 const fetchCSRFToken = async (retryCount = 0): Promise<string | null> => {
     // If a fetch is already in progress, wait for it instead of making another request
     if (csrfTokenPromise) {
-        console.debug('[CSRF] Token fetch already in progress, waiting...');
         return csrfTokenPromise;
     }
 
     // Check cache one more time before fetching
     const cached = getCachedCSRFToken();
     if (cached && !tokenIsStale()) {
-        console.debug('[CSRF] Using cached token');
         return cached;
     }
 
     csrfTokenPromise = (async () => {
         try {
-            console.debug(`[CSRF] Fetching token (attempt ${retryCount + 1})...`);
             const response = await fetch(`${ENV.apiUrl}/v1/csrf-token`, {
                 method: 'GET',
                 credentials: 'include',
@@ -82,7 +81,6 @@ const fetchCSRFToken = async (retryCount = 0): Promise<string | null> => {
             if (!response.ok) {
                 if (response.status === 429 && retryCount < 2) {
                     // Rate limited - exponential backoff retry
-                    console.warn(`[CSRF] Rate limited (429), retrying in ${Math.pow(2, retryCount) * 1000}ms...`);
                     await new Promise(resolve => 
                         setTimeout(resolve, Math.pow(2, retryCount) * 1000)
                     );
@@ -96,7 +94,6 @@ const fetchCSRFToken = async (retryCount = 0): Promise<string | null> => {
             const data = await response.json();
             if (data?.csrfToken && data.csrfToken.length > 0) {
                 storeCSRFToken(data.csrfToken);
-                console.debug('[CSRF] Token fetched and cached');
                 return data.csrfToken as string;
             }
 
@@ -142,12 +139,10 @@ export const initializeCSRFToken = async () => {
     // Check if we already have a valid cached token
     const cached = getCachedCSRFToken();
     if (cached && !tokenIsStale()) {
-        console.debug('✅ CSRF token already cached');
         return;
     }
 
     // Fetch and cache for future use
-    console.debug('🔄 Initializing CSRF token...');
     await fetchCSRFToken();
 };
 
@@ -206,6 +201,49 @@ api.interceptors.response.use(
             error.message = backendError.error.message;
             (error as any).errorCode = backendError.error.code;
             (error as any).errorDetails = backendError.error.details;
+        }
+
+        // ── Auto-enqueue offline mutating requests into the retry queue ──────
+        // When a POST / PUT / PATCH / DELETE fails due to a network/offline error
+        // (not a 4xx/5xx server response), we persist the request so it is
+        // automatically replayed once the connection is restored.
+        const cfg: InternalAxiosRequestConfig | undefined = error.config;
+        const METHOD_ALLOWLIST: string[] = ['POST', 'PUT', 'PATCH', 'DELETE'];
+        const method = String(cfg?.method ?? '').toUpperCase();
+
+        const isOfflineFailure =
+            !error.response &&          // no HTTP response  → network-level failure
+            isLikelyOfflineError(error) &&
+            METHOD_ALLOWLIST.includes(method) &&
+            cfg?.url;
+
+        if (isOfflineFailure && cfg) {
+            const rawUrl = cfg.url as string;
+            const baseURL = (cfg.baseURL ?? ENV.apiUrl).replace(/\/$/, '');
+            const absoluteUrl = /^https?:\/\//i.test(rawUrl)
+                ? rawUrl
+                : `${baseURL}${rawUrl.startsWith('/') ? '' : '/'}${rawUrl}`;
+
+            // Collect any custom headers the request was about to send
+            const safeHeaders: Record<string, string> = {};
+            if (cfg.headers) {
+                for (const [k, v] of Object.entries(cfg.headers)) {
+                    if (typeof v === 'string') {
+                        safeHeaders[k] = v;
+                    }
+                }
+            }
+
+            enqueueRetryRequest({
+                url: absoluteUrl,
+                method: method as RetryMethod,
+                headers: safeHeaders,
+                body: cfg.data,
+            }, `Offline – queued for retry (${error.message})`);
+
+            console.info(
+                `[RetryQueue] Queued ${method} ${rawUrl} — will replay when back online.`,
+            );
         }
 
         // Re-throw for caller to handle

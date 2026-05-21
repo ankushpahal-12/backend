@@ -29,7 +29,7 @@ import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
 import Button from '../../components/ui/Button';
 import TelemetryNode from '../../components/common/TelemetryNode';
-import { useReset } from '../../hooks/useReset';
+import { useReset } from '../../hooks/useUserSignGlobal';
 
 const AuthGraphic = () => (
     <Box sx={{

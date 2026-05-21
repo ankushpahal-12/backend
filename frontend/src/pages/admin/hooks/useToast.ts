@@ -1,85 +1,99 @@
-import { useState, useCallback } from 'react';
-import { ToastNotification, NotificationType } from '../components/ui/Toast';
+import { useCallback } from 'react';
+import { toast, Id } from 'react-toastify';
 
 interface UseToastReturn {
-  toasts: ToastNotification[];
-  addToast: (message: string, type?: NotificationType, title?: string, duration?: number) => void;
-  removeToast: (id: string) => void;
-  clearAll: () => void;
-  success: (message: string, title?: string) => void;
-  error: (message: string, title?: string) => void;
-  info: (message: string, title?: string) => void;
-  processing: (message: string, title?: string) => void;
+  loading: (message: string, title?: string) => Id;
+  success: (message: string, title?: string, duration?: number) => void;
+  error: (message: string, title?: string, duration?: number) => void;
+  info: (message: string, title?: string, duration?: number) => void;
+  update: (toastId: Id, options: { render: string; type: 'success' | 'error' | 'info' | 'warning' | 'loading' }) => void;
+  dismiss: (toastId?: Id) => void;
 }
 
 export const useToast = (): UseToastReturn => {
-  const [toasts, setToasts] = useState<ToastNotification[]>([]);
-
-  const generateId = useCallback(() => {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  }, []);
-
-  const addToast = useCallback(
-    (message: string, type: NotificationType = 'info', title?: string, duration?: number) => {
-      const id = generateId();
-      const newToast: ToastNotification = {
-        id,
-        message,
-        type,
-        title,
-        duration: type === 'processing' ? 0 : duration,
-      };
-
-      setToasts((prev) => [...prev, newToast]);
-      return id;
-    },
-    [generateId]
-  );
-
-  const removeToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
-  }, []);
-
-  const clearAll = useCallback(() => {
-    setToasts([]);
+  const loading = useCallback((message: string, title?: string) => {
+    const content = title ? `${title}: ${message}` : message;
+    return toast.loading(content, {
+      position: 'top-right',
+      autoClose: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    });
   }, []);
 
   const success = useCallback(
-    (message: string, title?: string) => {
-      addToast(message, 'success', title || 'Success', 3000);
+    (message: string, title?: string, duration: number = 3000) => {
+      const content = title ? `${title}: ${message}` : message;
+      toast.success(content, {
+        position: 'top-right',
+        autoClose: duration,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     },
-    [addToast]
+    []
   );
 
   const error = useCallback(
-    (message: string, title?: string) => {
-      addToast(message, 'error', title || 'Error', 5000);
+    (message: string, title?: string, duration: number = 5000) => {
+      const content = title ? `${title}: ${message}` : message;
+      toast.error(content, {
+        position: 'top-right',
+        autoClose: duration,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     },
-    [addToast]
+    []
   );
 
   const info = useCallback(
-    (message: string, title?: string) => {
-      addToast(message, 'info', title || 'Info', 4000);
+    (message: string, title?: string, duration: number = 4000) => {
+      const content = title ? `${title}: ${message}` : message;
+      toast.info(content, {
+        position: 'top-right',
+        autoClose: duration,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     },
-    [addToast]
+    []
   );
 
-  const processing = useCallback(
-    (message: string, title?: string) => {
-      return addToast(message, 'processing', title || 'Processing', 0);
+  const update = useCallback(
+    (toastId: Id, options: { render: string; type: 'success' | 'error' | 'info' | 'warning' | 'loading' }) => {
+      toast.update(toastId, {
+        render: options.render,
+        type: options.type,
+        isLoading: options.type === 'loading',
+        position: 'top-right',
+        autoClose: options.type === 'loading' ? false : 5000,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     },
-    [addToast]
+    []
   );
+
+  const dismiss = useCallback((toastId?: Id) => {
+    if (toastId) {
+      toast.dismiss(toastId);
+    } else {
+      toast.dismiss();
+    }
+  }, []);
 
   return {
-    toasts,
-    addToast,
-    removeToast,
-    clearAll,
+    loading,
     success,
     error,
     info,
-    processing,
+    update,
+    dismiss,
   };
 };

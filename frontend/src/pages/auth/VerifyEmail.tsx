@@ -22,11 +22,13 @@ import {
     VisibilityOff,
     KeyboardBackspace
 } from '@mui/icons-material';
+import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
 import Button from '../../components/ui/Button';
 import TelemetryNode from '../../components/common/TelemetryNode';
-import { useVerify } from '../../hooks/useVerify';
+import NetworkLoader from '../../pages/admin/components/ui/NetworkLoader';
+import { useVerify } from '../../hooks/useUserSignGlobal';
 
 const AuthGraphic = () => (
     <Box sx={{
@@ -116,6 +118,8 @@ const AuthGraphic = () => (
 );
 
 const VerifyEmail = () => {
+    const [networkError, setNetworkError] = useState<'network' | 'server' | null>(null);
+    
     const {
         email,
         initialApiKey,
@@ -132,10 +136,40 @@ const VerifyEmail = () => {
         handleOtpChange,
         handleKeyDown,
         handlePaste,
-        handleVerify,
-        handleResend,
+        handleVerify: originalHandleVerify,
+        handleResend: originalHandleResend,
         copyToClipboard,
     } = useVerify();
+
+    const handleVerify = async (e: React.FormEvent) => {
+        setNetworkError(null);
+        try {
+            await originalHandleVerify(e);
+        } catch (error: any) {
+            if (!error.response) {
+                setNetworkError('network');
+            } else if (error.response?.status >= 500) {
+                setNetworkError('server');
+            }
+        }
+    };
+
+    const handleResend = async (e: React.FormEvent) => {
+        setNetworkError(null);
+        try {
+            await originalHandleResend(e);
+        } catch (error: any) {
+            if (!error.response) {
+                setNetworkError('network');
+            } else if (error.response?.status >= 500) {
+                setNetworkError('server');
+            }
+        }
+    };
+
+    const handleRetry = () => {
+        setNetworkError(null);
+    };
 
     if (isVerified && initialApiKey) {
         return (
@@ -218,6 +252,16 @@ const VerifyEmail = () => {
                 description="Secure multi-node email verification. Advanced security protocols active."
             />
 
+            {networkError && (
+                <NetworkLoader
+                    status={networkError === 'network' ? 'network-unavailable' : 'server-unavailable'}
+                    message={networkError === 'network' ? 'Unable to connect to the network. Please check your connection.' : 'The verification server is currently unavailable. Please try again later.'}
+                    onRetry={handleRetry}
+                    showDetails={true}
+                />
+            )}
+
+            {!networkError && (
             <Paper
                 className="glass-card"
                 sx={{
@@ -368,6 +412,7 @@ const VerifyEmail = () => {
                     </Grid>
                 </Grid>
             </Paper>
+            )}
         </AuthLayout>
     );
 };

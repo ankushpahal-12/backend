@@ -1,29 +1,3 @@
-/**
- * SECURE STORAGE - CORRECTED APPROACH
- * 
- * ⚠️ CRITICAL SECURITY NOTE:
- * Frontend encryption with exposed keys is NOT actually secure!
- * 
- * ✅ USE THIS FOR:
- * - UI preferences (theme, language, layout)
- * - Cached data (user profile, non-sensitive lists)
- * - Temporary app state
- * - Feature flags
- * 
- * ❌ DO NOT USE THIS FOR:
- * - Authentication tokens → Use HTTP-only cookies instead!
- * - Refresh tokens → Use HTTP-only cookies!
- * - Private keys → Never store in browser!
- * - Passwords → Never store in browser!
- * - API keys → Use server-side only!
- * 
- * Why? Because JavaScript can decrypt anything it can encrypt.
- * The encryption key is visible in the bundle → attacker can decrypt.
- * This only protects against casual inspection, not real attacks.
- * 
- * For sensitive data: Always use HTTP-only cookies via backend!
- */
-
 import CryptoJS from 'crypto-js';
 import api from './api';
 

@@ -84,7 +84,7 @@ const UserSettings: React.FC = () => {
         const promise = updateProfile(formData);
         toast.promise(promise, {
             loading: 'Saving identity...',
-            success: 'Neural identity updated successfully.',
+            success: 'Profile updated successfully.',
             error: (err) => err?.response?.data?.message || 'Failed to sync identity.',
         });
         try {
@@ -109,7 +109,7 @@ const UserSettings: React.FC = () => {
                 changePassword({ currentPassword: passwordData.current, password: passwordData.new }),
                 {
                     loading: 'Rotating master key...',
-                    success: 'Master key rotated. All other sessions signed out.',
+                    success: 'Password changed successfully. You will be logged out of all sessions.',
                     error: (err) => err?.response?.data?.message || 'Authorization failure — check your current password.',
                 }
             );

@@ -1,9 +1,4 @@
-/**
- * AUTHENTICATION ARCHITECTURE - CORRECTED
- * 
- * This guide explains why your previous approach was vulnerable
- * and how to implement proper, secure authentication.
- */
+
 
 import { useState, useEffect } from 'react';
 
@@ -20,85 +15,6 @@ interface User {
   [key: string]: any;
 }
 
-// ============================================================
-// THE MISTAKE: Frontend-encrypted token storage
-// ============================================================
-
-/**
- * ❌ WRONG APPROACH (Previous Implementation)
- * 
- * Frontend code:
- * const encrypted = CryptoJS.AES.encrypt(token, encryptionKey);
- * localStorage.setItem("__encrypted_auth", encrypted);
- * 
- * Why this is insecure:
- * 
- * 1. Encryption key is in JavaScript bundle
- *    • Attacker downloads your JS
- *    • Reads VITE_ENCRYPTION_KEY from process.env
- *    • Key is NOT secret
- * 
- * 2. JavaScript can decrypt anything it can encrypt
- *    • Attacker runs: CryptoJS.AES.decrypt(encrypted, key)
- *    • Game over
- * 
- * 3. Multiple attack vectors:
- *    • XSS vulnerability → inject malicious JS
- *    • Malicious browser extension → read localStorage
- *    • Compromised DNS → serve malicious JS
- *    • Supply chain attack → dependency compromised
- * 
- * 4. False sense of security
- *    • Looks secure to inexperienced developers
- *    • Actually protects against NOTHING
- *    • Only stops casual inspection (DevTools)
- */
-
-// ============================================================
-// THE SOLUTION: HTTP-only cookies (Backend-issued)
-// ============================================================
-
-/**
- * ✅ CORRECT APPROACH - HTTP-only Cookies
- * 
- * Backend:
- * res.cookie('auth_token', jwt, {
- *   httpOnly: true,      ← Cannot be read by JavaScript
- *   secure: true,        ← HTTPS only
- *   sameSite: 'strict',  ← CSRF protection
- *   maxAge: 7 * 24 * 60 * 60 * 1000  ← 7 days
- * });
- * 
- * Frontend:
- * // 1. Fetch with credentials (automatic cookie sending)
- * fetch('/api/endpoint', {
- *   method: 'POST',
- *   credentials: 'include',  ← This sends HTTP-only cookie!
- *   body: JSON.stringify(data)
- * });
- * 
- * // 2. Browser automatically:
- * //    - Sends cookie with request
- * //    - Receives new cookie from response
- * //    - Cannot read cookie value via JavaScript
- * //    - Cannot delete cookie via JavaScript
- * 
- * Why this works:
- * 1. Token never exposed to JavaScript
- * 2. Token automatically sent with credentials: 'include'
- * 3. Cannot be stolen via XSS (JavaScript can't read it)
- * 4. Backend validates signature on every request
- * 5. If token compromised, backend doesn't send updated one
- * 6. Token bound to secure, sameSite restrictions
- */
-
-// ============================================================
-// BACKEND: Cookie Setup (Express + Cookie-Parser)
-// ============================================================
-
-/**
- * In backend/controllers/authController.js:
- */
 
 async function login(req: any, res: any) {
   // ... validation ...
@@ -126,13 +42,10 @@ async function login(req: any, res: any) {
       email: user.email,
       role: user.role,
     },
-    // ⚠️ DO NOT send token here:
-    // token: token  ← REMOVE THIS!
   });
 }
 
 async function logout(req: any, res: any) {
-  // ✅ Clear the HTTP-only cookie
   res.clearCookie('auth_token', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

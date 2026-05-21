@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import * as securityService from '../services/securityService';
 
 interface SecurityEvent {
@@ -140,19 +140,15 @@ export const useCriticalSecurityEvents = (allEvents: SecurityEvent[]) => {
  * @returns Event counts by type
  */
 export const useSecurityEventStats = (allEvents: SecurityEvent[]) => {
-    const [stats, setStats] = useState<Record<string, number>>({});
-
-    useEffect(() => {
+    return useMemo(() => {
         const counts: Record<string, number> = {};
 
         allEvents.forEach(event => {
             counts[event.type] = (counts[event.type] || 0) + 1;
         });
 
-        setStats(counts);
+        return counts;
     }, [allEvents]);
-
-    return stats;
 };
 
 /**

@@ -6,18 +6,38 @@ import {
     Alert,
     Link
 } from '@mui/material';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import TelemetryNode from '../../components/common/TelemetryNode';
-import { useForgot } from '../../hooks/useForgot';
+import NetworkLoader from '../../pages/admin/components/ui/NetworkLoader';
+// import { useForgot } from '../../hooks/useUserSignGlobal';
 import { initAuthSession } from '../../services/authService';
 import toast from 'react-hot-toast';
-
+import { useForgot } from '../../hooks/useForgot';
 const ForgotPassword = () => {
-    const { email, setEmail, error, isLoading, handleSubmit } = useForgot();
+    const [networkError, setNetworkError] = useState<'network' | 'server' | null>(null);
+    const { email, setEmail, error, isLoading, handleSubmit: originalHandleSubmit } = useForgot();
     const navigate = useNavigate();
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        setNetworkError(null);
+        try {
+            await originalHandleSubmit(e);
+        } catch (error: any) {
+            if (!error.response) {
+                setNetworkError('network');
+            } else if (error.response?.status >= 500) {
+                setNetworkError('server');
+            }
+        }
+    };
+
+    const handleRetry = () => {
+        setNetworkError(null);
+    };
 
     const goToLogin = async () => {
         try {
@@ -34,6 +54,24 @@ const ForgotPassword = () => {
                 title="Forgot Password"
                 description="Secure password recovery portal. Advanced security protocols active."
             />
+            
+            {networkError && (
+                <NetworkLoader
+                    status={networkError === 'network' ? 'network-unavailable' : 'server-unavailable'}
+                    message={networkError === 'network' ? 'Unable to connect to the network. Please check your connection.' : 'The password recovery server is currently unavailable. Please try again later.'}
+                    onRetry={handleRetry}
+                    showDetails={true}
+                />
+            )}
+
+            {isLoading ? (
+                <NetworkLoader
+                    status="loading"
+                    message="Sending password reset code..."
+                    showDetails={false}
+                />
+            ) : (
+            !networkError && (
             <Card sx={{ p: { xs: 3, md: 5 } }}>
                 <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
                     <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 800 }}>
@@ -68,7 +106,7 @@ const ForgotPassword = () => {
                             disabled={isLoading || !email}
                             sx={{ py: 1.5 }}
                         >
-                            {isLoading ? 'Sending...' : 'Send Reset Code'}
+                            Send Reset Code
                         </Button>
 
                         <Typography variant="body2" align="center" sx={{ color: 'text.secondary' }}>
@@ -84,6 +122,7 @@ const ForgotPassword = () => {
                     </Stack>
                 </Box>
             </Card>
+            ))}
         </AuthLayout>
     );
 };
