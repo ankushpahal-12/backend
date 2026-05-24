@@ -219,9 +219,11 @@ const OfflineModal: React.FC<OfflineModalProps> = ({
 		<Dialog
 			open={open}
 			TransitionComponent={Transition}
+			fullWidth
+			maxWidth="xs"
 			PaperProps={{
 				elevation: 0,
-				className: "bg-transparent shadow-none overflow-visible w-full max-w-md mx-4 rounded-none",
+				className: "bg-transparent shadow-none overflow-visible w-full sm:max-w-md mx-0 sm:mx-4 rounded-none",
 				sx: { background: 'transparent', boxShadow: 'none' } // Keep minimal sx for Dialog specific overrides
 			}}
 			slotProps={{
@@ -229,10 +231,25 @@ const OfflineModal: React.FC<OfflineModalProps> = ({
 					className: "bg-slate-900/40 backdrop-blur-md",
 				},
 			}}
+			sx={{
+				'& .MuiDialog-container': {
+					width: '100%',
+					margin: 0,
+					padding: 0,
+					display: 'flex',
+					justifyContent: 'center',
+					alignItems: 'center',
+				},
+				'& .MuiPaper-root': {
+					margin: { xs: 0, sm: '32px' },
+					width: { xs: '100%', sm: 'calc(100% - 64px)' },
+					maxWidth: { xs: '100%', sm: '448px' },
+				}
+			}}
 		>
-			<DialogContent className="p-0 overflow-visible rounded-none">
+			<DialogContent className="p-0 overflow-visible rounded-none w-full">
 				{/* ── Card ── */}
-				<div className="relative bg-white/90 backdrop-blur-xl shadow-2xl border border-slate-200/50 rounded-none overflow-hidden">
+				<div className="relative bg-white/90 backdrop-blur-xl shadow-2xl border border-slate-200/50 rounded-none overflow-hidden w-full">
 					{/* Gradient tint overlay */}
 					<div 
 						className="absolute inset-0 pointer-events-none opacity-50"

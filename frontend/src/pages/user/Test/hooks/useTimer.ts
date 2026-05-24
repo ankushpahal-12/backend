@@ -5,11 +5,17 @@ export const useTimer = (initialSeconds: number, onTimeUp: () => void) => {
   const [isWarning, setIsWarning] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    if (initialSeconds > 0) {
-      setTimeLeft(initialSeconds);
-    }
-  }, [initialSeconds]);
+  const [prevInitialSeconds, setPrevInitialSeconds] = useState(initialSeconds);
+  if (initialSeconds !== prevInitialSeconds) {
+    setPrevInitialSeconds(initialSeconds);
+    setTimeLeft(initialSeconds);
+    setIsWarning(false);
+  }
+  // useEffect(() => {
+  //   if (initialSeconds > 0) {
+  //     setTimeLeft(initialSeconds);
+  //   }
+  // }, [initialSeconds]);
 
   const startTimer = useCallback(() => {
     if (timerRef.current) return;

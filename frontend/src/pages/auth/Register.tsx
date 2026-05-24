@@ -32,7 +32,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import React from 'react';
 import AuthLayout from '../../components/auth/AuthLayout';
-import Button from '../../components/ui/Button';
+import {Button }from '../../components/ui/button';
 import Loader from '../admin/components/ui/NetworkLoader';
 import TelemetryNode from '../../components/common/TelemetryNode';
 import PasswordStrengthMeter from '../../components/auth/PasswordStrengthMeter';
@@ -93,23 +93,23 @@ const AuthGraphic = ({ mode }: { mode: 'light' | 'dark' }) => (
                     <AutoAwesome sx={{ fontSize: 28, color: 'white' }} />
                 </Box>
                 <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: '-0.03em', color: mode === 'light' ? '#0F172A' : 'white', textShadow: mode === 'light' ? 'none' : '0 2px 10px rgba(0,0,0,0.5)' }}>
-                    FinTrack AI
+                    MCQManager
                 </Typography>
             </Stack>
 
             <Typography variant="h3" sx={{ fontWeight: 900, mb: 3, lineHeight: 1.1, letterSpacing: '-0.04em', color: mode === 'light' ? '#0F172A' : 'inherit' }}>
-                Initialize <br />
+                Create your <br />
                 <Box component="span" sx={{
                     background: mode === 'light'
                         ? 'linear-gradient(90deg, #4F46E5 0%, #6366F1 100%)'
                         : 'linear-gradient(90deg, #10B981 0%, #6EE7B7 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent'
-                }}>Neural</Box> Profile.
+                }}>MCQ</Box> profile.
             </Typography>
 
             <Typography variant="body1" sx={{ color: mode === 'light' ? 'rgba(15, 23, 42, 0.72)' : 'rgba(255,255,255,0.6)', mb: 8, maxWidth: 350, lineHeight: 1.8, fontSize: '1.05rem' }}>
-                Join the elite tier of financial intelligence. Your data is fragmented and encrypted across our sovereign mesh network.
+                Sign up to create or take MCQ tests, manage question banks, and track results.
             </Typography>
 
             <Stack spacing={4}>
@@ -206,7 +206,7 @@ const Register = () => {
 
 
         <AuthLayout>
-            <TelemetryNode title="Join FinTrack" description="Node Provisioning Initializer" />
+            <TelemetryNode title="Join MCQ Manager" description="Create an account for the Online MCQ test management platform" />
 
             <motion.div
                 initial={{ opacity: 0, y: 20 }}

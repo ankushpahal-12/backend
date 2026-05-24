@@ -88,9 +88,12 @@ const LoadingOverlay: React.FC = () => {
     const { isLoading, loadingText, progress, serverLoad } = useLoading();
     const { isConnected, latencyMs, signalStrength } = useSocket();
 
-    // Hide entire overlay on auth and admin pages - they have their own loaders
-    const isAuthOrAdminPage = /^\/(login|register|forgot-password|verify-email|admin-login|admin\/|auth\/)/i.test(window.location.pathname);
+    // Hide entire overlay on auth and admin pages (including /user/* auth routes)
+    const isAuthOrAdminPage = /^\/(user\/(login|register|forgot-password|reset-password|verify-email)|login|register|forgot-password|verify-email|admin-login|admin\/|auth\/)/i.test(window.location.pathname);
     const shouldShowOverlay = isLoading && !isAuthOrAdminPage;
+
+    // If we're on an auth or admin page, do not render the overlay at all
+    if (isAuthOrAdminPage) return null;
 
     return (
         <Backdrop

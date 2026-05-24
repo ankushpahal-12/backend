@@ -628,6 +628,7 @@ export const useReset = () => {
             await authService.resetPassword({ email, otp, password, logoutAll });
             await stopLoading(1200);
             setShowSuccess(true);
+            toast.success('Password updated successfully');
         } catch (err: unknown) {
             await stopLoading(500);
             toast.error(

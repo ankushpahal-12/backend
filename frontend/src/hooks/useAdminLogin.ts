@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import * as authService from '../services/authService';
 import { useNotification } from '../context/NotificationContext';
@@ -33,10 +34,11 @@ export const useAdminLogin = () => {
 
         try {
             const metrics = packageMetrics();
-            await authService.adminLogin({ email, password, metrics, requestId: newRid } as any);
-            await stopLoading();
-            showNotification('Primary authentication successful. Please enter 2FA code.', 'info');
-            setStep(2);
+                await authService.adminLogin({ email, password, metrics, requestId: newRid } as any);
+                await stopLoading();
+                showNotification('Primary authentication successful. Please enter 2FA code.', 'info');
+                toast('Primary authentication successful — 2FA sent to your admin email', { icon: '✉️' });
+                setStep(2);
         } catch (err: unknown) {
             await stopLoading();
             showNotification(
@@ -56,6 +58,7 @@ export const useAdminLogin = () => {
             await stopLoading();
             login(response.data.user, response.token);
             showNotification('Admin authentication verified. Welcome to the Command Center.', 'success');
+            toast.success('Admin authentication verified — welcome');
             navigate('/admin/dashboard');
         } catch (err: unknown) {
             await stopLoading();
@@ -63,6 +66,7 @@ export const useAdminLogin = () => {
                 (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Invalid 2FA code.',
                 'error'
             );
+            toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Invalid 2FA code.');
         }
     };
 

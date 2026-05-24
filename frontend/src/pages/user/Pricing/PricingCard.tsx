@@ -2,7 +2,7 @@ import React from 'react';
 import { Typography, Button } from '@mui/material';
 import { motion } from 'framer-motion';
 import { CheckCircle2, X, Star } from 'lucide-react';
-import Card from '../../../components/ui/Card';
+import {Card} from '@/components/ui/card';
 
 export type PricingFeature = {
   name: string;

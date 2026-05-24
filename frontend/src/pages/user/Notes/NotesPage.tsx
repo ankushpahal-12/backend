@@ -4,7 +4,7 @@ import MainLayout from '../../../components/layouts/MainLayout';
 import NotesEditor from './NotesEditor';
 import NotesHeader from './components/NotesHeader';
 import NotesView from './NotesView';
-import Modal from '../../../components/ui/Modal';
+import Modal from '../../../components/ui/modal';
 import { useEditor } from './hooks/useEditor';
 import { useNotes } from './hooks/useNotes';
 import type { NoteBackground, NoteEditorDraft, NoteTopic } from './types/types';

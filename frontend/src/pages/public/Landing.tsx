@@ -9,7 +9,8 @@ import {
   Pricing, 
   CallToAction,
   Footer,
-  DynamicBackground
+  DynamicBackground,
+  SmoothScroll
 } from '../../components/landing';
 
 const Landing: React.FC = () => {
@@ -39,14 +40,16 @@ const Landing: React.FC = () => {
 
       <div className="relative z-10 flex flex-col items-center">
         <Navbar transparent={false} />
-        <Hero />
-        <Stats />
-        <Features />
-        <HowItWorks />
-        <Testimonials />
-        <Pricing />
-        <CallToAction />
-        <Footer />
+        <SmoothScroll>
+          <Hero />
+          <Stats />
+          <Features />
+          <HowItWorks />
+          <Testimonials />
+          <Pricing />
+          <CallToAction />
+          <Footer />
+        </SmoothScroll>
       </div>
     </main>
   );

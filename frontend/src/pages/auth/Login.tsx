@@ -32,7 +32,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import AuthLayout from '../../components/auth/AuthLayout';
-import Button from '../../components/ui/Button';
+import {Button} from '../../components/ui/button';
 import TelemetryNode from '../../components/common/TelemetryNode';
 import NetworkLoader from '../../pages/admin/components/ui/NetworkLoader';
 import ConcurrentSessionModal from '../../components/auth/ConcurrentSessionModal';
@@ -59,10 +59,10 @@ const MobileAuthPanel = ({ mode }: { mode: 'light' | 'dark' }) => (
         <Stack spacing={2} sx={{ zIndex: 1 }}>
             <AutoAwesome sx={{ fontSize: 48, margin: '0 auto', color: mode === 'light' ? '#4F46E5' : 'white' }} />
             <Typography variant="h5" sx={{ fontWeight: 900, letterSpacing: '-0.02em' }}>
-                Secure Expense Tracking
+                MCQManager
             </Typography>
             <Typography variant="body2" sx={{ color: mode === 'light' ? 'rgba(15,23,42,0.7)' : 'rgba(255,255,255,0.8)', lineHeight: 1.6 }}>
-                Manage your finances with bank-grade encryption
+                Create, assign, and take MCQ tests with secure sessions and instant grading.
             </Typography>
         </Stack>
     </Box>
@@ -341,7 +341,7 @@ const Login = () => {
 
     return (
         <AuthLayout>
-            <TelemetryNode title="Login" description="Matrix Portal Sync" />
+            <TelemetryNode title="Login" description="Online MCQ test management platform — sign in to manage or take tests." />
             
             {networkError && (
                 <NetworkLoader

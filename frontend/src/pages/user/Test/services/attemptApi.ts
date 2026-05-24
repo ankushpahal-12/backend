@@ -1,6 +1,6 @@
 import api from '../../../../utils/api';
 import { AxiosError } from 'axios';
-import type { CandidateTest, Attempt, PublicTest, AttemptResult } from '../types/attempt.types';
+import type { CandidateTest, Attempt, AttemptResult } from '../types/attempt.types';
 
 const generateSessionId = () => {
   let sessionId = sessionStorage.getItem('attemptSessionId');
@@ -25,10 +25,13 @@ export const fetchAvailableTests = async () => {
   }
 };
 
-export const previewTest = async (token: string) => {
+export const previewTest = async (token: string): Promise<{ success: boolean; data?: Record<string, unknown> | null; status?: number; isBlocked?: boolean; error?: string }> => {
   try {
     const { data } = await api.get(`/v1/attempt/tests/preview/${token}`);
-    return { success: true, data: data.data as PublicTest };
+    return { 
+      success: true, 
+      data: data.data as Record<string, unknown>
+    };
   } catch (error: unknown) {
     const err = error as AxiosError<{message?: string; isBlocked?: boolean}>;
     return { 
@@ -40,7 +43,16 @@ export const previewTest = async (token: string) => {
   }
 };
 
-export const startAttempt = async (token: string, email?: string) => {
+export const startAttempt = async (token: string, email?: string): Promise<{
+  success: boolean;
+  data?: {
+    test: CandidateTest;
+    attempt: Attempt;
+  };
+  error?: string;
+  retakesExhausted?: boolean;
+  canContactAdmin?: boolean;
+}> => {
   try {
     const body = email ? { email } : {};
     console.log('🚀 startAttempt called with:', { token: token.slice(0, 20) + '...', email, body });
@@ -53,9 +65,14 @@ export const startAttempt = async (token: string, email?: string) => {
       }
     };
   } catch (error: unknown) {
-    const err = error as AxiosError<{message?: string}>;
+    const err = error as AxiosError<{message?: string; retakesExhausted?: boolean; canContactAdmin?: boolean}>;
     console.error('❌ startAttempt error:', err.response?.data?.message || err.message);
-    return { success: false, error: err.response?.data?.message || err.message };
+    return { 
+      success: false, 
+      error: err.response?.data?.message || err.message,
+      retakesExhausted: err.response?.data?.retakesExhausted || false,
+      canContactAdmin: err.response?.data?.canContactAdmin || false
+    };
   }
 };
 

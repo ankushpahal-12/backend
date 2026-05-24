@@ -31,7 +31,7 @@ export interface CandidateTest {
   settings: TestSettings;
 }
 
-export interface PublicTest {
+interface PublicTestBase {
   id: string;
   testId: string;
   title: string;
@@ -41,6 +41,23 @@ export interface PublicTest {
   category: string;
   instructions?: string;
 }
+
+interface PublicTestWithBlocking extends PublicTestBase {
+  isBlocked: boolean;
+  blockedMessage: string;
+}
+
+interface PublicTestWithEmailVerification extends PublicTestBase {
+  requiresEmailVerification: boolean;
+}
+
+interface PublicTestWithMetadata extends PublicTestBase {
+  emailAssigned?: boolean;
+  visibility?: string;
+  hasExistingAttempt?: boolean;
+}
+
+export type PublicTest = PublicTestBase & Partial<PublicTestWithBlocking> & Partial<PublicTestWithEmailVerification> & Partial<PublicTestWithMetadata>;
 
 export interface Answer {
   questionId: string;

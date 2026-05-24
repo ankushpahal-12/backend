@@ -32,8 +32,8 @@ export const useAttempt = () => {
         }
         throw new Error(errorMsg);
       }
-    } catch (err: any) {
-      const msg = err.message || 'Failed to start test';
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to start test';
       setError(msg);
       return false;
     } finally {
@@ -72,8 +72,8 @@ export const useAttempt = () => {
       } else {
         throw new Error(result.error);
       }
-    } catch (err: any) {
-      const msg = err.message || 'Failed to submit test';
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to submit test';
       toast.error(msg);
       return false;
     } finally {

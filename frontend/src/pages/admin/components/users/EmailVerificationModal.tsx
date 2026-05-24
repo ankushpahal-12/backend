@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { Button, Stack, Alert, CircularProgress, TextField, Box, Typography, Stepper, Step, StepLabel } from '@mui/material';
-import Modal from '../../../../components/ui/Modal';
+import Modal from '../../../../components/ui/modal';
 import { useVerifyEmailOTP } from '../../hooks/useVerifyEmailOTP';
 import { useSetPassword } from '../../hooks/useSetPassword';
 import type { User } from '../../hooks/useUserManagement';

@@ -18,8 +18,8 @@ import {
 } from '@mui/icons-material';
 import { useState } from 'react';
 import AuthLayout from '../../components/auth/AuthLayout';
-import Button from '../../components/ui/Button';
-import Card from '../../components/ui/Card';
+import {Button }from '../../components/ui/button';
+import {Card} from '@/components/ui/card';
 import TelemetryNode from '../../components/common/TelemetryNode';
 import NetworkLoader from './components/ui/NetworkLoader';
 import { useAdminLogin } from '../../hooks/useAdminLogin';
@@ -73,7 +73,7 @@ const AdminLogin = () => {
 
     return (
         <AuthLayout>
-            <TelemetryNode title="Admin Portal" description="High-Level Administrative Access" />
+            <TelemetryNode title="Admin Portal" description="Admin access for MCQ Manager — manage tests, users and retakes." />
             
             {networkError && (
                 <NetworkLoader

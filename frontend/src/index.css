@@ -388,3 +388,26 @@ select,
   animation: shimmer-fast 1.5s infinite;
 }
 
+/* ── premium horizontal integration carousel keyframes ── */
+@keyframes slide-infinite {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-carousel-infinite {
+  display: flex;
+  width: max-content;
+  animation: slide-infinite 45s linear infinite;
+}
+
+/* ── premium rotating border beam effect ── */
+@keyframes border-beam-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-border-beam {
+  animation: border-beam-rotate 5s linear infinite;
+}
+
+

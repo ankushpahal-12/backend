@@ -6,7 +6,7 @@ import {
   FileText, Sparkles, BarChart2, BookOpen, Headphones,
   ChevronDown, HelpCircle, Shield, CreditCard, Lock
 } from 'lucide-react';
-import Card from '../../../components/ui/Card';
+import {Card} from '@/components/ui/card';
 import PricingToggle from './PricingToggle';
 import PricingCard, { type PricingFeature } from './PricingCard';
 import DashboardLayout from '../Dashboard/DashboardLayout';

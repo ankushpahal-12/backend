@@ -18,7 +18,7 @@ import {
   Typography,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
-import Modal from '../../../../components/ui/Modal';
+import Modal from '../../../../components/ui/modal';
 import { useUserGlobal, type UserActionType } from '../../hooks/useUserGlobal';
 import type { User } from '../../hooks/useUserManagement';
 

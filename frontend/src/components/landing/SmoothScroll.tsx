@@ -1,4 +1,5 @@
 import React, { useEffect, type ReactNode } from 'react';
+import Lenis from 'lenis';
 
 interface SmoothScrollProps {
   children: ReactNode;
@@ -6,35 +7,35 @@ interface SmoothScrollProps {
 
 export const SmoothScroll: React.FC<SmoothScrollProps> = ({ children }) => {
   useEffect(() => {
-    // Add smooth scroll behavior to the document
-    const html = document.documentElement;
-    html.style.scrollBehavior = 'smooth';
+    // Initialize Lenis
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+      touchMultiplier: 1.5,
+    });
 
-    // Handle smooth scroll with parallax effect on scroll
-    let ticking = false;
-
-    const updateScroll = () => {
-      ticking = false;
+    // RAF loop
+    let rafId: number;
+    const raf = (time: number) => {
+      lenis.raf(time);
+      rafId = requestAnimationFrame(raf);
     };
+    rafId = requestAnimationFrame(raf);
 
-    const onScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(updateScroll);
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', onScroll, { passive: true });
+    // Make lenis globally accessible for other components (like scroll to)
+    (window as any).lenis = lenis;
 
     // Cleanup
     return () => {
-      window.removeEventListener('scroll', onScroll);
-      html.style.scrollBehavior = 'auto';
+      cancelAnimationFrame(rafId);
+      lenis.destroy();
+      delete (window as any).lenis;
     };
   }, []);
 
   return (
-    <div className="smooth-scroll-wrapper" style={{ overscrollBehavior: 'none' }}>
+    <div className="smooth-scroll-wrapper w-full" style={{ overscrollBehavior: 'none' }}>
       {children}
     </div>
   );

@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Container, Typography, Stack } from '@mui/material';
 import TelemetryNode from '../../components/common/TelemetryNode';
 import LegalLayout from '../../components/common/LegalLayout';
-import { Security, Lock, Visibility, Sync } from '@mui/icons-material';
+import { Security, Lock, Visibility, Sync, Public, Storage} from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
 const PrivacyPolicy: React.FC = () => {
@@ -32,37 +32,49 @@ const PrivacyPolicy: React.FC = () => {
     const sections = [
         {
             id: "1",
-            title: "Data Collection Protocols",
+            title: "Information We Collect",
             icon: <Visibility />,
-            color: "#10B981",
-            text: "FinTrack AI collects telemetry data necessary for the operation of your neural wealth engine. This includes encrypted biometric hashes, transaction metadata, and synchronized shard identifiers. Our zero-knowledge infrastructure ensures that even we cannot access your raw financial data."
+            color: "#10B981"
         },
         {
             id: "2",
-            title: "Quantum Encryption Standards",
+            title: "Data Security",
             icon: <Lock />,
-            color: "#3B82F6",
-            text: "All data is encrypted using AES-256 standard protocols before being fragmented across our sovereign mesh network. We employ k-anonymity principles for all external security checks, such as password breach verification."
+            color: "#3B82F6"
         },
         {
             id: "3",
-            title: "Shard Synchronization",
+            title: "Session & Device Management",
             icon: <Sync />,
-            color: "#A855F7",
-            text: "Your profile is synchronized across authorized matrix nodes (devices). You maintain full control over session concurrency and can revoke access to any node at any time via your security terminal."
+            color: "#A855F7"
         },
         {
             id: "4",
-            title: "Third-Party Integration",
+            title: "Assessment Monitoring",
             icon: <Security />,
-            color: "#F43F5E",
-            text: "FinTrack AI may interface with external identity providers (e.g., Google Node Sync) only with explicit user authorization. We do not sell or trade your financial telemetry to external entities."
+            color: "#F43F5E"
+        },
+        {
+            id: "5",
+            title: "Third-Party Services",
+            icon: <Public />,
+            color: "#F59E0B"
+        },
+        {
+            id: "6",
+            title: "Data Retention",
+            icon: <Storage />,
+            color: "#06B6D4"
         }
     ];
 
     return (
         <LegalLayout>
-            <TelemetryNode title="Privacy Policy" description="Neural Data Encryption Protocols" />
+            <TelemetryNode
+                title="Privacy Policy"
+                description="Platform Security & Data Protection Standards"
+            />
+
             <Container maxWidth="md">
                 <motion.div
                     variants={containerVariants}
@@ -70,17 +82,51 @@ const PrivacyPolicy: React.FC = () => {
                     animate="visible"
                 >
                     <motion.div variants={itemVariants}>
-                        <Stack spacing={2} sx={{ mb: 10, textAlign: 'center', position: 'relative' }}>
+                        <Stack
+                            spacing={2}
+                            sx={{
+                                mb: 10,
+                                textAlign: 'center',
+                                position: 'relative'
+                            }}
+                        >
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full pointer-events-none" />
-                            <Typography variant="h2" sx={{ fontWeight: 900, letterSpacing: '-0.04em', color: 'white', position: 'relative', zIndex: 1 }}>
-                                Privacy <Box component="span" sx={{
-                                    background: 'linear-gradient(90deg, #10B981 0%, #34D399 100%)',
-                                    WebkitBackgroundClip: 'text',
-                                    WebkitTextFillColor: 'transparent'
-                                }}>Policy</Box>
+
+                            <Typography
+                                variant="h2"
+                                sx={{
+                                    fontWeight: 900,
+                                    letterSpacing: '-0.04em',
+                                    color: 'white',
+                                    position: 'relative',
+                                    zIndex: 1
+                                }}
+                            >
+                                Privacy{' '}
+                                <Box
+                                    component="span"
+                                    sx={{
+                                        background:
+                                            'linear-gradient(90deg, #10B981 0%, #34D399 100%)',
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent'
+                                    }}
+                                >
+                                    Policy
+                                </Box>
                             </Typography>
-                            <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: 1, position: 'relative', zIndex: 1 }}>
-                                SECURITY STANDARD v9 • UPDATED MARCH 2026
+
+                            <Typography
+                                variant="body1"
+                                sx={{
+                                    color: 'rgba(255,255,255,0.4)',
+                                    fontWeight: 600,
+                                    letterSpacing: 1,
+                                    position: 'relative',
+                                    zIndex: 1
+                                }}
+                            >
+                                SECURITY STANDARD • UPDATED MAY 2026
                             </Typography>
                         </Stack>
                     </motion.div>
@@ -93,16 +139,36 @@ const PrivacyPolicy: React.FC = () => {
                                 className="relative pl-8 border-l border-white/10"
                             >
                                 <Box sx={{ mb: 4 }}>
-                                    <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
-                                        <Box sx={{
-                                            color: section.color,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}>
-                                            {React.cloneElement(section.icon as React.ReactElement, { sx: { fontSize: 24 } })}
+                                    <Stack
+                                        direction="row"
+                                        alignItems="center"
+                                        spacing={2}
+                                        sx={{ mb: 3 }}
+                                    >
+                                        <Box
+                                            sx={{
+                                                color: section.color,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
+                                            }}
+                                        >
+                                            {React.cloneElement(
+                                                section.icon as React.ReactElement,
+                                                {
+                                                    sx: { fontSize: 24 }
+                                                }
+                                            )}
                                         </Box>
-                                        <Typography variant="h5" sx={{ fontWeight: 900, color: 'white', letterSpacing: '-0.01em' }}>
+
+                                        <Typography
+                                            variant="h5"
+                                            sx={{
+                                                fontWeight: 900,
+                                                color: 'white',
+                                                letterSpacing: '-0.01em'
+                                            }}
+                                        >
                                             {section.title}
                                         </Typography>
                                     </Stack>
@@ -112,17 +178,78 @@ const PrivacyPolicy: React.FC = () => {
                                         sx={{
                                             color: 'rgba(255,255,255,0.7)',
                                             lineHeight: 2,
-                                            fontSize: '1.1rem',
+                                            fontSize: '1.05rem',
                                             '& b': {
                                                 color: section.color,
                                                 fontWeight: 800
                                             }
                                         }}
                                     >
-                                        {section.id === "1" && <>FinTrack AI collects <b>telemetry data</b> necessary for the operation of your <b>neural wealth engine</b>. This includes <b>encrypted biometric hashes</b>, <b>transaction metadata</b>, and <b>synchronized shard identifiers</b>. Our <b>zero-knowledge infrastructure</b> ensures that even we cannot access your <b>raw financial data</b>.</>}
-                                        {section.id === "2" && <>All data is <b>encrypted</b> using <b>AES-256 standard protocols</b> before being fragmented across our <b>sovereign mesh network</b>. We employ <b>k-anonymity principles</b> for all external security checks, such as <b>password breach verification</b>.</>}
-                                        {section.id === "3" && <>Your profile is <b>synchronized</b> across <b>authorized matrix nodes</b> (devices). You maintain <b>full control</b> over session concurrency and can <b>revoke access</b> to any node at any time via your <b>security terminal</b>.</>}
-                                        {section.id === "4" && <>FinTrack AI may interface with <b>external identity providers</b> (e.g., Google Node Sync) only with <b>explicit user authorization</b>. We do <b>not sell or trade</b> your financial telemetry to external entities.</>}
+                                        {section.id === "1" && (
+                                            <>
+                                                We collect <b>essential account and assessment-related information</b>
+                                                including your name, email address, login activity,
+                                                assessment responses, device information, IP address,
+                                                and session metadata to ensure secure platform
+                                                functionality and improve user experience.
+                                            </>
+                                        )}
+
+                                        {section.id === "2" && (
+                                            <>
+                                                All sensitive information is protected using
+                                                <b> industry-standard encryption protocols</b>,
+                                                secure HTTPS communication, password hashing,
+                                                secure authentication systems, and
+                                                <b> role-based access controls</b>. We continuously
+                                                monitor and improve our infrastructure to protect
+                                                user data from unauthorized access.
+                                            </>
+                                        )}
+
+                                        {section.id === "3" && (
+                                            <>
+                                                Users can manage <b>active sessions across devices</b>.
+                                                Suspicious login attempts, concurrent sessions,
+                                                and unauthorized access attempts may be monitored
+                                                for security and fraud prevention purposes.
+                                                Users may revoke device access at any time.
+                                            </>
+                                        )}
+
+                                        {section.id === "4" && (
+                                            <>
+                                                During assessments, the platform may monitor
+                                                <b> tab switching, fullscreen exits, unusual activity,
+                                                rapid navigation patterns, and copy/paste actions</b>
+                                                to help maintain assessment integrity and prevent
+                                                unauthorized behavior. Security events may be logged
+                                                for audit and review purposes.
+                                            </>
+                                        )}
+
+                                        {section.id === "5" && (
+                                            <>
+                                                We may use trusted <b>third-party services</b>
+                                                such as authentication providers, analytics tools,
+                                                cloud hosting platforms, and email services to
+                                                operate the platform securely and efficiently.
+                                                We do <b>not sell or trade personal user data</b>
+                                                to external parties.
+                                            </>
+                                        )}
+
+                                        {section.id === "6" && (
+                                            <>
+                                                Assessment records, account information,
+                                                and security logs may be retained for a
+                                                limited period to support analytics,
+                                                fraud prevention, compliance, and platform
+                                                operations. Users may request account
+                                                deletion or data removal subject to
+                                                applicable legal and operational requirements.
+                                            </>
+                                        )}
                                     </Typography>
                                 </Box>
                             </motion.div>
@@ -135,3 +262,4 @@ const PrivacyPolicy: React.FC = () => {
 };
 
 export default PrivacyPolicy;
+

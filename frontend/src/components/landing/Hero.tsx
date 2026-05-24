@@ -1,432 +1,451 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Play, ArrowRight, Star, Users, CheckCircle, GraduationCap, Sparkles, Brain, Send, HelpCircle, Check, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, useScroll, useTransform, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
+import { ArrowRight, ChevronDown, Sparkles, Zap, Shield, BarChart3, BookOpen, GraduationCap, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { initAuthSession } from '../../services/authService';
-import toast from 'react-hot-toast';
+import image from '../../assets/image.png';
+import heroImage1 from '../../assets/hero-image1.png';
+import heroImage2 from '../../assets/hero-image2.png';
+import heroImage7 from '../../assets/hero-image7.png';
+import { Magnetic } from './Magnetic';
+import { gsap } from 'gsap';
 
-// Interactive doubt samples
-const MOCK_DOUBTS = [
-  {
-    pill: '🔬 Quantum Entanglement',
-    text: 'Explain quantum entanglement simply.',
-    tags: ['Physics', 'Quantum'],
-    explanation: 'Quantum entanglement is a mind-bending physical phenomenon where two or more particles become interconnected. When this happens, the physical state of one particle instantly determines the state of the other, no matter how far apart they are (even across the universe!).',
-    question: 'Does quantum entanglement allow us to transmit binary messages faster than light?',
-    options: [
-      'Yes, instantly across any distance.',
-      'No, because the measurements look completely random until compared.',
-      'Only if the particles are inside a vacuum.'
-    ],
-    correctIdx: 1,
-    explanationHint: 'Correct! Although the states are instantly correlated, no usable information or message can be transmitted faster than light. You still need classical communication to compare results!'
-  },
-  {
-    pill: '🌿 Photosynthesis',
-    text: 'Explain Photosynthesis and its main product.',
-    tags: ['Biology', 'Science'],
-    explanation: 'Photosynthesis is the biological process where plants, algae, and certain bacteria capture light energy from the sun and convert it into chemical energy (glucose) which fuels their growth, releasing oxygen as a vital byproduct.',
-    question: 'Which primary pigment absorbs sunlight in green plants?',
-    options: [
-      'Carotenoids',
-      'Chlorophyll',
-      'Anthocyanins'
-    ],
-    correctIdx: 1,
-    explanationHint: 'Spot on! Chlorophyll is the green pigment in chloroplasts that absorbs light energy, primarily in the blue and red wavelengths.'
-  },
-  {
-    pill: '📐 Pythagorean Theorem',
-    text: 'What is the Pythagorean Theorem and why does it work?',
-    tags: ['Math', 'Geometry'],
-    explanation: 'The Pythagorean Theorem is a fundamental rule in geometry stating that in a right-angled triangle, the area of the square whose side is the hypotenuse (c) is equal to the sum of the areas of the squares on the other two sides (a and b): a² + b² = c².',
-    question: 'If a right triangle has legs of lengths 3 and 4, what is the hypotenuse?',
-    options: [
-      '5',
-      '6',
-      '7'
-    ],
-    correctIdx: 0,
-    explanationHint: 'Correct! 3² + 4² = 9 + 16 = 25. The square root of 25 is exactly 5.'
-  }
-];
+/* ─── Sparkle Keyword popover component ───────────────────────── */
+interface SparkleKeywordProps {
+  children: React.ReactNode;
+  popoverTitle: string;
+  popoverDesc: string;
+  popoverStat: string;
+}
 
-export const Hero = () => {
-  const navigate = useNavigate();
+const SparkleKeyword: React.FC<SparkleKeywordProps> = ({ children, popoverTitle, popoverDesc, popoverStat }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  
+  return (
+    <span 
+      className="relative inline-block cursor-help group z-30"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 border-b border-dashed border-cyan-400/40 pb-0.5 group-hover:border-cyan-400 transition-all font-black">
+        {children}
+      </span>
+      
+      {/* Subtle Floating Sparkles (Avoid exploding particles; highly minimalist, slow-drifting) */}
+      <AnimatePresence>
+        {isHovered && (
+          <>
+            {/* Shimmer star 1 */}
+            <motion.span
+              initial={{ opacity: 0, scale: 0, x: -10, y: 0 }}
+              animate={{ opacity: 0.8, scale: 1, x: -18, y: -25, rotate: 90 }}
+              exit={{ opacity: 0, scale: 0 }}
+              transition={{ duration: 1.5, ease: 'easeOut' }}
+              className="absolute text-cyan-400 pointer-events-none"
+            >
+              <Sparkles size={8} className="fill-current" />
+            </motion.span>
+            {/* Shimmer star 2 */}
+            <motion.span
+              initial={{ opacity: 0, scale: 0, x: 10, y: 0 }}
+              animate={{ opacity: 0.8, scale: 0.9, x: 22, y: -15, rotate: -45 }}
+              exit={{ opacity: 0, scale: 0 }}
+              transition={{ duration: 1.8, ease: 'easeOut', delay: 0.1 }}
+              className="absolute text-purple-400 pointer-events-none"
+            >
+              <Sparkles size={6} className="fill-current" />
+            </motion.span>
+            
+            {/* Glass micro-popover displaying technological schematic */}
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: -10, scale: 1 }}
+              exit={{ opacity: 0, y: 5, scale: 0.95 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-4 rounded-2xl bg-[#090d16]/95 border border-cyan-500/25 backdrop-blur-xl shadow-2xl pointer-events-none z-50 text-left font-sans"
+            >
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-cyan-500/5 via-transparent to-purple-500/5 pointer-events-none" />
+              <span className="text-[10px] font-black text-cyan-400 tracking-wider uppercase block mb-1">
+                {popoverTitle}
+              </span>
+              <p className="text-[11px] text-slate-300 font-medium leading-relaxed mb-2">
+                {popoverDesc}
+              </p>
+              <div className="flex items-center gap-1.5 pt-2 border-t border-white/5 text-[10px] font-bold text-slate-400">
+                <Zap size={10} className="text-cyan-400" />
+                <span>Metrics: <strong className="text-white">{popoverStat}</strong></span>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </span>
+  );
+};
 
-  // Navigation handlers
-  const handleStartFree = async () => {
-    try {
-      const sid = await initAuthSession('signup');
-      navigate(`/user/register?sid=${sid}&mode=signup`);
-    } catch {
-      toast.error('Failed to initialize session. Please try again.');
-    }
+/* ─── modular test category item with independent smooth 3D tilt ─── */
+interface CategoryItemProps {
+  imageSrc: string;
+  title: string;
+  desc: string;
+  glowColor: string;
+  glowClass: string;
+  stepIndex: number;
+}
+
+const CategoryItem: React.FC<CategoryItemProps> = ({ imageSrc, title, desc, glowColor, glowClass, stepIndex }) => {
+  const tiltX = useMotionValue(0);
+  const tiltY = useMotionValue(0);
+  const tiltSpringX = useSpring(tiltX, { stiffness: 100, damping: 18 });
+  const tiltSpringY = useSpring(tiltY, { stiffness: 100, damping: 18 });
+  
+  const rotateX = useTransform(tiltSpringY, [-0.5, 0.5], [10, -10]);
+  const rotateY = useTransform(tiltSpringX, [-0.5, 0.5], [-10, 10]);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    tiltX.set((e.clientX - rect.left) / rect.width - 0.5);
+    tiltY.set((e.clientY - rect.top) / rect.height - 0.5);
   };
 
-  // Doubt Box States
-  const [selectedDoubtIdx, setSelectedDoubtIdx] = useState<number | null>(null);
-  const [typedText, setTypedText] = useState('');
-  const [aiState, setAiState] = useState<'idle' | 'analyzing' | 'explaining' | 'complete'>('idle');
-  const [streamingExplanation, setStreamingExplanation] = useState('');
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [answeredState, setAnsweredState] = useState<'none' | 'correct' | 'incorrect'>('none');
-
-  // Trigger typing simulation
-  const handleSelectDoubt = (idx: number) => {
-    if (aiState === 'analyzing' || aiState === 'explaining') return;
-    
-    setSelectedDoubtIdx(idx);
-    setTypedText('');
-    setAiState('idle');
-    setStreamingExplanation('');
-    setSelectedAnswer(null);
-    setAnsweredState('none');
-
-    // Simulate user typing
-    const targetText = MOCK_DOUBTS[idx].text;
-    let currentIdx = 0;
-    
-    const typingTimer = setInterval(() => {
-      if (currentIdx < targetText.length) {
-        setTypedText((prev) => prev + targetText.charAt(currentIdx));
-        currentIdx++;
-      } else {
-        clearInterval(typingTimer);
-      }
-    }, 25);
-  };
-
-  // Simulate AI Response
-  const handleAskAI = () => {
-    if (selectedDoubtIdx === null || typedText.trim() === '') return;
-    
-    setAiState('analyzing');
-    
-    // Simulate analyzing step
-    setTimeout(() => {
-      setAiState('explaining');
-      const targetExplanation = MOCK_DOUBTS[selectedDoubtIdx].explanation;
-      let charIdx = 0;
-      setStreamingExplanation('');
-
-      const streamTimer = setInterval(() => {
-        if (charIdx < targetExplanation.length) {
-          setStreamingExplanation((prev) => prev + targetExplanation.charAt(charIdx));
-          charIdx += 4; // Stream multiple characters for smooth pacing
-        } else {
-          clearInterval(streamTimer);
-          setStreamingExplanation(targetExplanation); // Ensure complete match
-          setAiState('complete');
-        }
-      }, 15);
-    }, 1200);
-  };
-
-  // Handle MCQ click
-  const handleAnswerClick = (optIdx: number) => {
-    if (selectedDoubtIdx === null || aiState !== 'complete') return;
-    setSelectedAnswer(optIdx);
-    if (optIdx === MOCK_DOUBTS[selectedDoubtIdx].correctIdx) {
-      setAnsweredState('correct');
-      toast.success('Awesome! Correct answer.');
-    } else {
-      setAnsweredState('incorrect');
-      toast.error('Not quite! Try again.');
-    }
-  };
-
-  // Stagger variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.15, delayChildren: 0.1 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.7, ease: [0.215, 0.61, 0.355, 1] }
-    }
+  const handleMouseLeave = () => {
+    tiltX.set(0);
+    tiltY.set(0);
   };
 
   return (
-    <section id="home" className="relative min-h-screen w-full flex flex-col items-center overflow-hidden bg-transparent pt-32 lg:pt-36 pb-20">
+    <motion.div
+      className="flex flex-col items-center justify-center cursor-pointer select-none group"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ perspective: 1000 }}
+    >
+      {/* EXTREMELY LARGE image container with custom zoom magnification */}
+      <motion.div
+        style={{
+          rotateX,
+          rotateY,
+          transformStyle: 'preserve-3d',
+        }}
+        whileHover={{ 
+          scale: 1.08, 
+          y: -15,
+        }}
+        animate={{
+          y: [0, -10, 0],
+        }}
+        transition={{
+          y: { duration: 5.5 + stepIndex * 0.5, repeat: Infinity, ease: 'easeInOut' },
+          scale: { type: 'spring', stiffness: 200, damping: 20 },
+        }}
+        className={`w-full h-[260px] sm:h-[350px] md:h-[380px] lg:h-[460px] xl:h-[500px] overflow-hidden flex items-center justify-center transition-all duration-300 pointer-events-auto rounded-[2rem] hover:${glowClass}`}
+      >
+        {/* Scale increased to 1.32 (magnifying by 32% to crop whitespace margins and show massive detailed models) */}
+        <img
+          src={imageSrc}
+          alt={title}
+          className="w-full h-full object-contain filter transition-all duration-500 scale-[1.32] group-hover:scale-[1.38]"
+          style={{ transform: 'translateZ(40px)' }}
+        />
+      </motion.div>
       
-      {/* Dynamic Background Glows */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-[-1]">
-        <div className="absolute top-[5%] left-[5%] w-[45%] h-[45%] rounded-full bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-transparent blur-[130px] dark:from-indigo-500/15 dark:via-purple-500/15" />
-        <div className="absolute top-[20%] right-[-10%] w-[40%] h-[40%] rounded-full bg-gradient-to-bl from-pink-500/10 via-rose-500/10 to-transparent blur-[120px] dark:from-pink-500/15 dark:via-rose-500/15" />
+      <div className="text-center mt-8 z-10" style={{ transform: 'translateZ(20px)' }}>
+        <h4 className="text-xl font-black text-white tracking-wide uppercase transition-colors duration-300 group-hover:text-cyan-400">
+          {title}
+        </h4>
+        <p className="text-xs text-slate-400 mt-2.5 font-medium max-w-[320px] mx-auto leading-relaxed">
+          {desc}
+        </p>
+      </div>
+    </motion.div>
+  );
+};
+
+/* ─── main hero component ─────────────────────────────────────── */
+export const Hero = () => {
+  const navigate = useNavigate();
+  const { scrollY } = useScroll();
+
+  // Monochrome Cine Grain Turbulence Seed State
+  const [noiseSeed, setNoiseSeed] = useState(0);
+
+  // Scroll Parallax for subtle text/button shifts
+  const textParallax = useTransform(scrollY, [0, 600], [0, -20]);
+
+  // Spotlight Cursor Tracking
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    setMousePos({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+  };
+
+  // Film grain noise seeds & GSAP orchestrated button fade-in
+  useEffect(() => {
+    // 1. Film grain seed loop (Cinema flicker)
+    const grainInterval = setInterval(() => {
+      setNoiseSeed(Math.random());
+    }, 60);
+
+    // 2. GSAP entrance timeline for buttons
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: 'power4.out' } });
+
+      tl.fromTo('.hero-cta-group', 
+        { opacity: 0, y: 10 },
+        { opacity: 1, y: 0, duration: 1.0, delay: 0.4 }
+      )
+      .fromTo('.hero-categories-box',
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 1.2 },
+        '-=0.8'
+      )
+      .fromTo('.hero-scroll-indicator',
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.8 },
+        '-=0.5'
+      );
+    }, containerRef);
+
+    return () => {
+      clearInterval(grainInterval);
+      ctx.revert();
+    };
+  }, []);
+
+  // Smooth scroll down to explore
+  const handleScrollDown = () => {
+    const nextSection = document.querySelector('#stats') || document.querySelector('section:nth-of-type(2)');
+    if (nextSection) {
+      if ((window as any).lenis) {
+        (window as any).lenis.scrollTo(nextSection, { offset: -20, duration: 1.4 });
+      } else {
+        nextSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
+  // Dynamically generate 42 telemetry bars with an increasing and decreasing sine wave height pattern
+  // and a continuous spectral color shift (Cyan -> Blue -> Indigo -> Purple -> Pink -> Rose -> Amber -> Teal)
+  const telemetryBars = Array.from({ length: 42 }).map((_, i) => {
+    // Generate an increasing and decreasing height pattern using sine/cosine waves
+    const angle = (i / 41) * Math.PI * 3.2; // ~3 full waves across the screen
+    // Base height ranging from 45 to 175
+    const baseHeight = 90 + Math.sin(angle) * 65 + Math.cos(angle * 2) * 20;
+    const finalHeight = Math.max(30, Math.min(180, Math.round(baseHeight)));
+
+    // Choose unique gradient colors across the section to ensure it's not the same color
+    const colors = [
+      'from-cyan-500/35 to-transparent hover:from-cyan-400',
+      'from-blue-500/35 to-transparent hover:from-blue-400',
+      'from-indigo-500/35 to-transparent hover:from-indigo-400',
+      'from-purple-500/35 to-transparent hover:from-purple-400',
+      'from-pink-500/35 to-transparent hover:from-pink-400',
+      'from-rose-500/35 to-transparent hover:from-rose-400',
+      'from-amber-500/35 to-transparent hover:from-amber-400',
+      'from-teal-500/35 to-transparent hover:from-teal-400',
+    ];
+    // Map colors continuously across the 42 bars to create a smooth spectrum gradient transition
+    const colorIndex = Math.floor((i / 42) * colors.length);
+    const color = colors[colorIndex % colors.length];
+
+    return {
+      height: finalHeight,
+      color,
+      delay: i * 0.045,
+      duration: 2.2 + (i % 3) * 0.5,
+    };
+  });
+
+  return (
+    <section
+      id="home"
+      ref={containerRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="relative w-full overflow-hidden bg-[#021d26] text-slate-100 flex flex-col justify-end select-none"
+    >
+      {/* ── Native fully-responsive mockup image driving the top section height ── */}
+      <div className="relative w-full z-10 border-b border-white/5">
+        <img
+          src={image}
+          alt="PrepExcel Mockup Design"
+          className="w-full h-auto block pointer-events-none z-0"
+        />
+
+        {/* ================== PIXEL-PERFECT RESPONSIVE BUTTON OVERLAY (SCALES WITH IMAGE) ================== */}
+        <motion.div
+          style={{ y: textParallax }}
+          className="hero-cta-group absolute left-[6.2%] bottom-[12%] sm:bottom-[13%] lg:bottom-[14%] xl:bottom-[15%] z-30 flex flex-row items-center justify-start gap-2.5 sm:gap-6 pointer-events-none"
+        >
+          <button
+            disabled
+            className="group relative pl-4 pr-1.5 py-1.5 sm:pl-8 sm:pr-3 sm:py-3.5 bg-[#ff5a00] text-white font-extrabold rounded-full flex items-center justify-between gap-2.5 sm:gap-5 shadow-lg shadow-[#ff5a00]/30 opacity-75 cursor-not-allowed pointer-events-none select-none text-[7px] sm:text-[10px] md:text-xs tracking-wider"
+          >
+            START PRACTICING NOW
+            <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full bg-white flex items-center justify-center text-[#ff5a00] flex-shrink-0">
+              <ArrowRight className="w-2.5 h-2.5 sm:w-4 sm:h-4" strokeWidth={3} />
+            </div>
+          </button>
+
+          <button
+            disabled
+            className="text-white hover:text-slate-200 font-extrabold underline underline-offset-4 cursor-not-allowed pointer-events-none opacity-75 select-none text-[7px] sm:text-[10px] md:text-xs tracking-wider"
+          >
+            Take a Free Demo Test
+          </button>
+        </motion.div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
-        <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-12">
-          
-          {/* LEFT CONTENT: Value Prop */}
-          <motion.div 
-            className="flex-1 text-left space-y-8 max-w-2xl"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {/* Interactive Beta Badge */}
-            <motion.div 
-              variants={itemVariants}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50/50 dark:bg-slate-800/60 border border-indigo-100/50 dark:border-slate-700/60 backdrop-blur-xl shadow-sm"
-            >
-              <Sparkles size={13} className="text-indigo-600 dark:text-indigo-400 animate-spin" style={{ animationDuration: '4s' }} />
-              <span className="text-[11px] font-black text-indigo-700 dark:text-indigo-300 tracking-wider uppercase">Next-Gen AI Learning Tool</span>
-            </motion.div>
+      {/* ── premium animated monochrome turbulence (cinema film grain feel) ── */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.022] mix-blend-overlay z-50">
+        <filter id="monochromeCinemaNoise">
+          <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" seed={noiseSeed} stitchTiles="stitch" />
+          <feColorMatrix type="matrix" values="0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0 0 0 1 0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#monochromeCinemaNoise)" />
+      </svg>
 
-            {/* Title */}
-            <motion.h1 
-              variants={itemVariants}
-              className="text-5xl sm:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white leading-[1.05] tracking-tight"
-            >
-              Got a <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">Doubt?</span> <br />
-              Ask. Learn. Improve.
-            </motion.h1>
+      {/* ── Neural Grid Mesh Background Overlay ── */}
+      <div 
+        className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.008)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.008)_1px,transparent_1px)] bg-[size:44px_44px] pointer-events-none z-0"
+        style={{
+          maskImage: 'radial-gradient(circle at center, #000 70%, transparent 100%)',
+          WebkitMaskImage: 'radial-gradient(circle at center, #000 70%, transparent 100%)'
+        }}
+      />
 
-            {/* Description */}
-            <motion.p 
-              variants={itemVariants}
-              className="text-lg sm:text-xl text-slate-600 dark:text-slate-400 leading-relaxed font-medium"
-            >
-              From complex confusion to total clarity in seconds. Aura extracts core concepts, creates personalized summaries, and tests your mastery dynamically.
-            </motion.p>
+      {/* Dynamic Grid Spotlight Overlay */}
+      {isHovered && (
+        <div
+          className="absolute pointer-events-none w-[600px] h-[600px] rounded-full bg-gradient-to-r from-blue-500/4 to-cyan-500/4 blur-[130px] transition-all duration-200 ease-out z-0 mix-blend-screen"
+          style={{
+            left: mousePos.x - 300,
+            top: mousePos.y - 300,
+          }}
+        />
+      )}
 
-            {/* Quick Actions */}
-            <motion.div 
-              variants={itemVariants}
-              className="flex flex-wrap gap-4 pt-2"
-            >
-              <motion.button 
-                whileHover={{ scale: 1.03, y: -2 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={handleStartFree}
-                className="group px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold rounded-2xl transition-all flex items-center gap-2 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40"
-              >
-                Start Practicing Free
-                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-              </motion.button>
-              
-              <motion.button 
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="px-8 py-4 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200/50 dark:border-white/10 text-slate-800 dark:text-white font-bold rounded-2xl transition-all flex items-center gap-3"
-              >
-                <div className="w-8 h-8 rounded-full bg-indigo-500/10 dark:bg-white/10 flex items-center justify-center flex-shrink-0">
-                  <Play size={14} className="text-indigo-600 dark:text-white fill-current ml-0.5" />
-                </div>
-                Watch 1-Min Demo
-              </motion.button>
-            </motion.div>
+      {/* ================== EXTREME LARGE TEST CATEGORIES CONTAINER (DIFFERENT COLOR SECTION) ================== */}
+      <div className="w-full relative bg-gradient-to-b from-[#02000d] via-[#11052c] to-[#04000b] overflow-hidden">
+        
+        {/* Layered, multicolored neon radial auras to ensure a highly dynamic spectrum bg */}
+        <div className="absolute top-1/4 left-[-10vw] w-[50vw] h-[50vw] rounded-full bg-cyan-500/8 blur-[130px] pointer-events-none mix-blend-screen" />
+        <div className="absolute top-1/2 left-1/4 w-[45vw] h-[45vw] rounded-full bg-purple-500/8 blur-[140px] pointer-events-none mix-blend-screen" />
+        <div className="absolute bottom-1/4 right-[-10vw] w-[55vw] h-[55vw] rounded-full bg-pink-500/8 blur-[150px] pointer-events-none mix-blend-screen" />
+        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-[35vw] h-[35vw] rounded-full bg-amber-500/5 blur-[120px] pointer-events-none mix-blend-screen" />
 
-            {/* Quick Metrics */}
-            <motion.div 
-              variants={itemVariants}
-              className="flex items-center gap-8 pt-4 border-t border-slate-100 dark:border-slate-800/60"
-            >
-              <div className="flex -space-x-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="w-9 h-9 rounded-full border-2 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800 overflow-hidden shadow-sm">
-                    <img src={`https://i.pravatar.cc/100?img=${i + 15}`} alt="User Avatar" className="w-full h-full object-cover" />
-                  </div>
-                ))}
-              </div>
-              <div>
-                <div className="flex items-center gap-1">
-                  <span className="text-sm font-black text-slate-800 dark:text-white">4.9/5</span>
-                  <div className="flex text-amber-400">
-                    {[...Array(5)].map((_, i) => <Star key={i} size={13} fill="currentColor" />)}
-                  </div>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mt-0.5">Trusted by 10,000+ Students</p>
-              </div>
-            </motion.div>
-          </motion.div>
+        {/* Glowing Neural Mesh in this section */}
+        <div className="absolute inset-0 bg-radial-gradient(circle at center, rgba(99,102,241,0.03), transparent 70%) pointer-events-none" />
 
-          {/* RIGHT CONTENT: Interactive doubt card widget */}
-          <motion.div 
-            className="flex-1 w-full max-w-xl relative lg:mt-0"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            {/* Interactive Doubt Box Container */}
-            <div className="relative rounded-3xl p-6 bg-gradient-to-b from-white/70 to-white/30 dark:from-slate-900/80 dark:to-slate-950/40 backdrop-blur-2xl border border-white dark:border-slate-800/80 shadow-[0_30px_60px_rgba(0,0,0,0.06)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.5)] overflow-hidden">
-              
-              {/* Box header */}
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800/60 mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
-                    <Brain size={20} className="animate-bounce" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">Interactive Doubt Playground</h3>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold">EXPERIENCE AURA REAL-TIME</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">AI Engine Live</span>
-                </div>
-              </div>
+        <div className="hero-categories-box w-full max-w-[1440px] mx-auto px-6 sm:px-12 lg:px-20 xl:px-24 pt-24 pb-44 relative z-20 flex flex-col items-center">
+          <span className="text-[10px] font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-indigo-300 tracking-[0.3em] uppercase mb-4 text-center block select-none">
+            🔥 Core Examination Focus Domains
+          </span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white text-center tracking-tight mb-6 uppercase select-none">
+            Master Specialized Online Certified Tests
+          </h2>
 
-              {/* Doubt Pill Presets */}
-              <div className="mb-5 space-y-2">
-                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Select a sample doubt to ask:</p>
-                <div className="flex flex-wrap gap-2">
-                  {MOCK_DOUBTS.map((doubt, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleSelectDoubt(idx)}
-                      disabled={aiState === 'analyzing' || aiState === 'explaining'}
-                      className={`text-xs px-3.5 py-2 rounded-xl font-bold border transition-all duration-300 ${
-                        selectedDoubtIdx === idx
-                          ? 'bg-indigo-500 border-indigo-500 text-white shadow-md shadow-indigo-500/20'
-                          : 'bg-white hover:bg-slate-50 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
-                      }`}
-                    >
-                      {doubt.pill}
-                    </button>
-                  ))}
-                </div>
-              </div>
+          <p className="text-slate-400 font-medium text-sm sm:text-base text-center max-w-3xl mx-auto leading-relaxed mb-20 sm:mb-28 select-none">
+            Choose a focus area to begin your adaptive simulated practice. Each specialized testing environment is equipped with genuine, exam-grade assessment questions, exact certification timelines, and integrated automated AI proctoring controls.
+          </p>
 
-              {/* Input box */}
-              <div className="relative mb-6">
-                <textarea
-                  value={typedText}
-                  onChange={(e) => {
-                    if (aiState === 'idle' || aiState === 'complete') {
-                      setTypedText(e.target.value);
-                      setSelectedDoubtIdx(null);
-                    }
-                  }}
-                  disabled={aiState === 'analyzing' || aiState === 'explaining'}
-                  placeholder="Type your own study doubt here..."
-                  className="w-full min-h-[90px] p-4 pr-12 rounded-2xl bg-slate-50/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 resize-none transition-all"
-                />
-                <button
-                  onClick={handleAskAI}
-                  disabled={typedText.trim() === '' || aiState === 'analyzing' || aiState === 'explaining'}
-                  className="absolute bottom-3 right-3 w-9 h-9 rounded-xl bg-indigo-500 hover:bg-indigo-600 disabled:bg-slate-200 dark:disabled:bg-slate-800 text-white disabled:text-slate-400 flex items-center justify-center transition-all shadow-md shadow-indigo-500/10 focus:outline-none"
-                >
-                  <Send size={15} />
-                </button>
-              </div>
-
-              {/* AI Streaming Result Output */}
-              <AnimatePresence mode="wait">
-                {aiState !== 'idle' && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -15 }}
-                    className="p-5 rounded-2xl bg-indigo-50/30 dark:bg-indigo-950/20 border border-indigo-100/50 dark:border-indigo-900/30"
-                  >
-                    {/* State header */}
-                    <div className="flex items-center gap-2 mb-3">
-                      {aiState === 'analyzing' && (
-                        <>
-                          <div className="w-4 h-4 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
-                          <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">AI Synthesis Engine analyzing...</span>
-                        </>
-                      )}
-                      {aiState === 'explaining' && (
-                        <>
-                          <Sparkles size={14} className="text-indigo-500 animate-pulse" />
-                          <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Generating Concept Map...</span>
-                        </>
-                      )}
-                      {aiState === 'complete' && selectedDoubtIdx !== null && (
-                        <>
-                          <CheckCircle size={14} className="text-emerald-500" />
-                          <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Synthesis Complete</span>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Explanations Text */}
-                    {streamingExplanation && (
-                      <div className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed font-semibold font-sans mb-5 border-l-2 border-indigo-400 pl-3">
-                        {streamingExplanation}
-                      </div>
-                    )}
-
-                    {/* Dynamic MCQ component */}
-                    {aiState === 'complete' && selectedDoubtIdx !== null && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="mt-4 pt-4 border-t border-indigo-100/40 dark:border-indigo-900/20"
-                      >
-                        <div className="flex items-center gap-1.5 mb-3 text-slate-800 dark:text-slate-200">
-                          <HelpCircle size={15} className="text-indigo-500" />
-                          <p className="text-xs font-black tracking-tight uppercase">Instant Practice Quiz:</p>
-                        </div>
-                        <p className="text-xs text-slate-800 dark:text-slate-200 font-bold mb-3">{MOCK_DOUBTS[selectedDoubtIdx].question}</p>
-                        <div className="space-y-2">
-                          {MOCK_DOUBTS[selectedDoubtIdx].options.map((opt, oIdx) => {
-                            const isCorrect = oIdx === MOCK_DOUBTS[selectedDoubtIdx].correctIdx;
-                            const isSelected = selectedAnswer === oIdx;
-                            
-                            let optStyle = 'bg-white hover:bg-slate-50 dark:bg-slate-900/60 dark:hover:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300';
-                            if (isSelected) {
-                              optStyle = isCorrect
-                                ? 'bg-emerald-500/10 border-emerald-500 text-emerald-700 dark:text-emerald-300'
-                                : 'bg-rose-500/10 border-rose-500 text-rose-700 dark:text-rose-300';
-                            }
-                            
-                            return (
-                              <button
-                                key={oIdx}
-                                onClick={() => handleAnswerClick(oIdx)}
-                                className={`w-full text-left p-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-between gap-3 ${optStyle}`}
-                              >
-                                <span>{opt}</span>
-                                {isSelected && (
-                                  isCorrect ? <Check size={14} className="text-emerald-500 flex-shrink-0" /> : <X size={14} className="text-rose-500 flex-shrink-0" />
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        {/* Hint box */}
-                        {answeredState !== 'none' && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            className="mt-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-900 text-[11px] font-bold text-slate-500 dark:text-slate-400"
-                          >
-                            {MOCK_DOUBTS[selectedDoubtIdx].explanationHint}
-                          </motion.div>
-                        )}
-                      </motion.div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Interactive Dashboard Glow */}
-              <div className="absolute -bottom-10 -right-10 w-44 h-44 rounded-full bg-gradient-to-br from-indigo-500/2 to-purple-500/2 blur-2xl pointer-events-none" />
-            </div>
-
-            {/* Glowing Halo around interactive container */}
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-3xl opacity-20 -z-10 blur-2xl" />
-          </motion.div>
+          {/* 3-Column horizontal borderless showcase - FREE FLOWING layout */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-16 sm:gap-20 lg:gap-24 w-full items-stretch">
+            <CategoryItem
+              imageSrc={heroImage1}
+              title="Networking & Security"
+              glowColor="rgba(99,102,241,0.3)"
+              glowClass="drop-shadow-[0_25px_40px_rgba(99,102,241,0.35)]"
+              desc="Configure robust secure network topologies, firewall rule layers, and threat detection vectors."
+              stepIndex={0}
+            />
+            <CategoryItem
+              imageSrc={heroImage2}
+              title="Artificial Intelligence"
+              glowColor="rgba(168,85,247,0.3)"
+              glowClass="drop-shadow-[0_25px_40px_rgba(168,85,247,0.35)]"
+              desc="Master neural network weights, decision forests, genetic training patterns, and reinforcement learning."
+              stepIndex={1}
+            />
+            <CategoryItem
+              imageSrc={heroImage7}
+              title="CS Fundamentals"
+              glowColor="rgba(6,182,212,0.3)"
+              glowClass="drop-shadow-[0_25px_40px_rgba(6,182,212,0.35)]"
+              desc="Deconstruct digital logic gates, compass coordinates, guidance values, and abacus counting principles."
+              stepIndex={2}
+            />
+          </div>
         </div>
+
+        {/* ================== INCREASING AND DECREASING BOTTOM FREQUENCY Equalizer WAVE PATTERN ================== */}
+        <div className="absolute bottom-[3px] left-0 right-0 h-44 flex items-end justify-between px-3 sm:px-6 md:px-12 pointer-events-none z-10 opacity-80 gap-[2px] sm:gap-[3px]">
+          {telemetryBars.map((bar, i) => (
+            <motion.div
+              key={i}
+              animate={{
+                height: [bar.height - 18, bar.height + 18, bar.height - 18]
+              }}
+              transition={{
+                duration: bar.duration,
+                repeat: Infinity,
+                ease: 'easeInOut',
+                delay: bar.delay
+              }}
+              className={`flex-1 rounded-t-full bg-gradient-to-t ${bar.color} transition-all duration-300 pointer-events-auto cursor-pointer`}
+              style={{ minHeight: '12px' }}
+            />
+          ))}
+        </div>
+
+        {/* Asymmetric Wave Clipping Mask at bottom separating hero from Stats */}
+        <div className="absolute bottom-0 left-0 right-0 w-full overflow-hidden pointer-events-none z-20 leading-none">
+          <svg className="relative block w-full h-[20px] sm:h-[60px]" viewBox="0 0 1440 120" preserveAspectRatio="none">
+            <path d="M0,32L120,42.7C240,53,480,75,720,74.7C960,75,1200,53,1320,42.7L1440,32L1440,120L1320,120C1200,120,960,120,720,120C480,120,240,120,120,120L0,120 Z" className="fill-[#ffffff] dark:fill-slate-950" />
+          </svg>
+        </div>
+
+        {/* ================== BOTTOM HERO: PREMIUM SCROLL INDICATOR ================== */}
+        <motion.div
+          className="hero-scroll-indicator absolute bottom-3 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1.5 sm:gap-2 cursor-pointer group"
+          onClick={handleScrollDown}
+        >
+          <span className="text-[7px] sm:text-[10px] font-black text-slate-500/80 uppercase tracking-[0.25em] transition-colors duration-300 group-hover:text-cyan-400 select-none">
+            Scroll to Explore
+          </span>
+          <div className="w-4 h-6 sm:w-6 sm:h-10 rounded-full border border-slate-700/80 group-hover:border-cyan-500/80 flex items-start justify-center p-0.5 sm:p-1.5 transition-all duration-300 backdrop-blur-sm bg-slate-950/20">
+            <motion.div
+              animate={{
+                y: [0, 8, 0],
+                opacity: [1, 0.4, 1]
+              }}
+              transition={{
+                duration: 1.8,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="w-0.5 h-1 sm:w-1 sm:h-1.5 rounded-full bg-slate-400 group-hover:bg-cyan-400 transition-all duration-300"
+            />
+          </div>
+          <motion.div
+            animate={{ y: [0, 3, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+            className="text-slate-600 group-hover:text-cyan-400 transition-colors duration-300"
+          >
+            <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4" />
+          </motion.div>
+        </motion.div>
+
       </div>
     </section>
   );
 };
 
 export default Hero;
-

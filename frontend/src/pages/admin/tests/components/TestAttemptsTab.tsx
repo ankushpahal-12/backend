@@ -7,8 +7,23 @@ import toast from 'react-hot-toast';
 import { TestResultModal } from './TestResultModal';
 
 interface TestAttemptsTabProps {
-  test: any;
-  attempts: any[];
+  test: { _id?: string; assignedUsers?: unknown[] } | null;
+  attempts: Array<{
+    _id: string;
+    status: string;
+    userId?: { name?: string; email?: string };
+    startedAt?: string;
+    submittedAt?: string;
+    timeSpentSeconds?: number;
+    totalMarksObtained?: number;
+    totalMarksPossible?: number;
+    percentage?: number;
+    allowRetake?: boolean;
+    isUnseen?: boolean;
+    isMoreOptionOn?: boolean;
+    isBlocked?: boolean;
+    isAdminGrantedRetake?: boolean;
+  }>;
   onRefresh: () => void;
 }
 
@@ -139,7 +154,7 @@ export const TestAttemptsTab: React.FC<TestAttemptsTabProps> = ({ test, attempts
     }
   };
 
-  const filteredAttempts = attempts.filter((attempt: any) => {
+  const filteredAttempts = attempts.filter((attempt) => {
     const name = (attempt.userId?.name || '').toLowerCase();
     const email = (attempt.userId?.email || '').toLowerCase();
     const search = searchTerm.toLowerCase();
@@ -180,7 +195,7 @@ export const TestAttemptsTab: React.FC<TestAttemptsTabProps> = ({ test, attempts
           </div>
         </div>
 
-        <div className="overflow-x-auto min-h-[400px]">
+        <div className="overflow-x-auto min-h-100">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className={`text-xs uppercase font-semibold ${isLightMode ? 'bg-slate-50 text-slate-500 border-b border-slate-200' : 'bg-slate-900/50 text-slate-400 border-b border-white/10'}`}>
               <tr>
@@ -197,12 +212,12 @@ export const TestAttemptsTab: React.FC<TestAttemptsTabProps> = ({ test, attempts
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-white/5">
               {filteredAttempts.length > 0 ? (
-                filteredAttempts.map((attempt: any, idx: number) => {
+                filteredAttempts.map((attempt, idx: number) => {
                   const user = attempt.userId || {};
                   const isCompleted = attempt.status === 'submitted' || attempt.status === 'graded';
                   
                   return (
-                    <tr key={attempt._id} className={`transition-colors ${isLightMode ? 'hover:bg-slate-50/50' : 'hover:bg-white/[0.02]'}`}>
+                    <tr key={attempt._id} className={`transition-colors ${isLightMode ? 'hover:bg-slate-50/50' : 'hover:bg-white/2'}`}>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ${getAvatarColor(idx)}`}>
@@ -229,9 +244,9 @@ export const TestAttemptsTab: React.FC<TestAttemptsTabProps> = ({ test, attempts
                           {attempt.status === 'in-progress' ? 'In Progress' : attempt.status === 'submitted' ? 'Completed' : attempt.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{formatDate(attempt.startedAt)}</td>
-                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{formatDate(attempt.submittedAt)}</td>
-                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{formatDuration(attempt.timeSpentSeconds)}</td>
+                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{formatDate(attempt.startedAt ?? '')}</td>
+                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{formatDate(attempt.submittedAt ?? '')}</td>
+                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{formatDuration(attempt.timeSpentSeconds ?? 0)}</td>
                       <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">
                         {isCompleted ? `${attempt.totalMarksObtained} / ${attempt.totalMarksPossible}` : '—'}
                       </td>
@@ -285,9 +300,9 @@ export const TestAttemptsTab: React.FC<TestAttemptsTabProps> = ({ test, attempts
                                     type="checkbox" 
                                     className="sr-only peer" 
                                     checked={attempt.allowRetake || false}
-                                    onChange={() => handleToggle(attempt._id, 'allowRetake', attempt.allowRetake)}
+                                    onChange={() => handleToggle(attempt._id, 'allowRetake', attempt.allowRetake ?? false)}
                                   />
-                                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5..5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5..5 after:left-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
                                 </label>
                               </div>
                             </div>
@@ -302,9 +317,9 @@ export const TestAttemptsTab: React.FC<TestAttemptsTabProps> = ({ test, attempts
                                     type="checkbox" 
                                     className="sr-only peer" 
                                     checked={attempt.isUnseen || false}
-                                    onChange={() => handleToggle(attempt._id, 'isUnseen', attempt.isUnseen)}
+                                    onChange={() => handleToggle(attempt._id, 'isUnseen', attempt.isUnseen ?? false)}
                                   />
-                                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
                                 </label>
                               </div>
                             </div>
@@ -321,9 +336,9 @@ export const TestAttemptsTab: React.FC<TestAttemptsTabProps> = ({ test, attempts
                                     type="checkbox" 
                                     className="sr-only peer"
                                     checked={attempt.isMoreOptionOn || false}
-                                    onChange={() => handleToggle(attempt._id, 'isMoreOptionOn', attempt.isMoreOptionOn)}
+                                    onChange={() => handleToggle(attempt._id, 'isMoreOptionOn', attempt.isMoreOptionOn ?? false)}
                                   />
-                                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
                                 </label>
                               </div>
                             </div>
@@ -340,9 +355,9 @@ export const TestAttemptsTab: React.FC<TestAttemptsTabProps> = ({ test, attempts
                                     type="checkbox" 
                                     className="sr-only peer"
                                     checked={attempt.isBlocked || false}
-                                    onChange={() => handleToggle(attempt._id, 'isBlocked', attempt.isBlocked)}
+                                    onChange={() => handleToggle(attempt._id, 'isBlocked', attempt.isBlocked ?? false)}
                                   />
-                                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-500"></div>
+                                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-500"></div>
                                 </label>
                               </div>
                             </div>

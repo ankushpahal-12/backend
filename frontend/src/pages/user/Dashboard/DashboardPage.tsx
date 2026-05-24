@@ -25,7 +25,7 @@ import {
 	XAxis,
 	YAxis,
 } from 'recharts';
-import Card from '../../../components/ui/Card';
+import {Card} from '@/components/ui/card';
 import { useThemeContext } from '../../../context/ThemeContext';
 import DashboardLayout from './DashboardLayout';
 

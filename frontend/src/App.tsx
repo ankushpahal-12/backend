@@ -107,117 +107,54 @@ function App() {
                 />
                 <NotificationProvider>
                   <Routes>
-                    <Route path="/user/login" element={<GuestProvision><Login /></GuestProvision>} />
-                    <Route path="/user/register" element={<GuestProvision><Register /></GuestProvision>} />
-                    <Route path="/user/verify-email" element={<GuestProvision><VerifyEmail /></GuestProvision>} />
+                      {/* Admin and user routes for the login and the signup */}
+                      <Route path="/user/login" element={<GuestProvision><Login /></GuestProvision>} />
+                      <Route path="/user/register" element={<GuestProvision><Register /></GuestProvision>} />
+                      <Route path="/user/verify-email" element={<GuestProvision><VerifyEmail /></GuestProvision>} />
                       <Route path="/user/forgot-password" element={<GuestProvision><ForgotPassword /></GuestProvision>} />
                       <Route path="/user/reset-password" element={<GuestProvision><ResetPassword /></GuestProvision>} />
                       <Route path="/auth/2fa/setup" element={<TwoFactorSetup />} />
                       <Route path="/admin/login" element={<GuestProvision><AdminLogin /></GuestProvision>} />
 
                       {/* Protected Admin Routes - High Security */}
-                      <Route
-                        path="/admin/dashboard"
-                        element={<SystemProvision accessTiers={['admin']}><AdminDashboard /></SystemProvision>}
-                      />
-                      <Route
-                        path="/admin/settings"
-                        element={<SystemProvision accessTiers={['admin']}><AdminSettings /></SystemProvision>}
-                      />
-                      <Route
-                        path="/admin/security"
-                        element={<SystemProvision accessTiers={['admin']}><SecurityPage /></SystemProvision>}
-                      />
-                      <Route
-                        path="/admin/users"
-                        element={<SystemProvision accessTiers={['admin']}><AdminUsersSecurityWrapper><AdminUsersPublicView /></AdminUsersSecurityWrapper></SystemProvision>}
-                      />
-                      <Route
-                        path="/admin/support/tickets"
-                        element={<SystemProvision accessTiers={['admin']}><SupportTicketPage /></SystemProvision>}
-                      />
-                      <Route
-                        path="/admin/support/tickets/:id"
-                        element={<SystemProvision accessTiers={['admin']}><TicketDetailsPage /></SystemProvision>}
-                      />
-                      <Route
-                        path="/admin/subscriptions"
-                        element={<SystemProvision accessTiers={['admin']}><SubscriptionPage /></SystemProvision>}
-                      />
-
+                      <Route path="/admin/users"     element={<SystemProvision accessTiers={['admin']}><AdminUsersSecurityWrapper><AdminUsersPublicView /></AdminUsersSecurityWrapper></SystemProvision>}/>
+                      <Route path="/admin/settings"  element={<SystemProvision accessTiers={['admin']}><AdminSettings /></SystemProvision>}/>
+                      <Route path="/admin/security"  element={<SystemProvision accessTiers={['admin']}><SecurityPage /></SystemProvision>}/>
+                      <Route path="/admin/dashboard" element={<SystemProvision accessTiers={['admin']}><AdminDashboard /></SystemProvision>}/>
+                      <Route path="/admin/support/tickets" element={<SystemProvision accessTiers={['admin']}><SupportTicketPage /></SystemProvision>}/>
+                      <Route path="/admin/support/tickets/:id"element={<SystemProvision accessTiers={['admin']}><TicketDetailsPage /></SystemProvision>}/>
+                      <Route path="/admin/subscriptions"element={<SystemProvision accessTiers={['admin']}><SubscriptionPage /></SystemProvision>}/>
+                      
                       {/* Protected Admin Test Routes - Manage Tests */}
-                      <Route
-                        path="/admin/tests"
-                        element={<SystemProvision accessTiers={['admin']}><AdminTestsPage /></SystemProvision>}
-                      />
-                      <Route
-                        path="/admin/tests/create"
-                        element={<SystemProvision accessTiers={['admin']}><CreateEditTestPage /></SystemProvision>}
-                      />
-                      <Route
-                        path="/admin/tests/edit/:testId"
-                        element={<SystemProvision accessTiers={['admin']}><CreateEditTestPage /></SystemProvision>}
-                      />
-
+                      <Route path="/admin/tests"element={<SystemProvision accessTiers={['admin']}><AdminTestsPage /></SystemProvision>}/>                      <Route path="/admin/tests/create"element={<SystemProvision accessTiers={['admin']}><CreateEditTestPage /></SystemProvision>}/>
+                      <Route path="/admin/tests/edit/:testId"element={<SystemProvision accessTiers={['admin']}><CreateEditTestPage /></SystemProvision>}/>
+          
                       {/* Public Email Verification Route - No authentication required */}
-                      <Route
-                        path="/verify-email"
-                        element={<GuestProvision><EmailVerificationSecurityWrapper><EmailVerificationPage /></EmailVerificationSecurityWrapper></GuestProvision>}
-                      />
+                      <Route path="/verify-email"element={<GuestProvision><EmailVerificationSecurityWrapper><EmailVerificationPage /></EmailVerificationSecurityWrapper></GuestProvision>}/>
 
                       {/* Protected User Routes */}
-                      <Route
-                        path="/user/settings"
-                        element={<SystemProvision accessTiers={['user']}><UserSettings /></SystemProvision>}
-                      />
-                      <Route
-                        path="/user/dashboard"
-                        element={<SystemProvision accessTiers={['user']}><UserDashboard /></SystemProvision>}
-                      />
-
-                      <Route
-                        path="/user/notes"
-                        element={<SystemProvision accessTiers={['user']}><NotesPage /></SystemProvision>}
-                      />
-                      <Route
-                        path="/user/notes/editor/:noteId?"
-                        element={<SystemProvision accessTiers={['user']}><NotesEditorPage /></SystemProvision>}
-                      />
-                      <Route
-                        path="/user/pricing"
-                        element={<SystemProvision accessTiers={['user']}><PricingPage /></SystemProvision>}
-                      />
-
-                      <Route
-                        path="/user/ai-insights"
-                        element={<SystemProvision accessTiers={['user']}><AIInsightsPage /></SystemProvision>}
-                      />
-                      <Route
-                        path="/user/profile"
-                        element={<SystemProvision accessTiers={['user']}><ProfilePage /></SystemProvision>}
-                      />
+                      <Route path="/user/settings" element={<SystemProvision accessTiers={['user']}><UserSettings /></SystemProvision>}/>
+                      <Route path="/user/dashboard"element={<SystemProvision accessTiers={['user']}><UserDashboard /></SystemProvision>}/>
+                      <Route path="/user/notes"element={<SystemProvision accessTiers={['user']}><NotesPage /></SystemProvision>}/>
+                      <Route path="/user/notes/editor/:noteId?" element={<SystemProvision accessTiers={['user']}><NotesEditorPage /></SystemProvision>}/>
+                      <Route path="/user/pricing"  element={<SystemProvision accessTiers={['user']}><PricingPage /></SystemProvision>}/>
+                      <Route path="/user/ai-insights"element={<SystemProvision accessTiers={['user']}><AIInsightsPage /></SystemProvision>}/>
+                      <Route path="/user/profile"element={<SystemProvision accessTiers={['user']}><ProfilePage /></SystemProvision>}/>
+                      
 
                       {/* Public Test Attempt Route - Accessible via email share links without authentication */}
-                      <Route
-                        path="/attempt/:shareToken"
-                        element={<AttemptPage />}
-                      />
-
+                      <Route  path="/attempt/:shareToken" element={<AttemptPage />}/>
+                      
                       {/* Protected User Test Routes - Take Tests */}
-                      <Route
-                        path="/tests"
-                        element={<SystemProvision accessTiers={['user']}><AvailableTestsPage /></SystemProvision>}
-                      />
-                      <Route
-                        path="/attempt/result/:attemptId"
-                        element={<SystemProvision accessTiers={['user']}><AttemptResultPage /></SystemProvision>}
-                      />
+                      <Route path="/tests"element={<SystemProvision accessTiers={['user']}><AvailableTestsPage /></SystemProvision>}/>
+                      <Route path="/attempt/result/:attemptId"element={<SystemProvision accessTiers={['user']}><AttemptResultPage /></SystemProvision>}/>
+                      
+                      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                      <Route path="/terms-of-service" element={<TermsOfService />} />
+                      <Route path="/" element={<Landing />} />
+                      <Route path="*" element={<NotFound />} />
 
 
-                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                    <Route path="/terms-of-service" element={<TermsOfService />} />
-                  <Route path="/" element={<Landing />} />
-                    <Route path="*" element={<NotFound />} />
                   </Routes>
                 </NotificationProvider>
               </Router>

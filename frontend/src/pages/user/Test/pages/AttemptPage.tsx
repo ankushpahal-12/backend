@@ -1,371 +1,70 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React from 'react';
 import { Maximize, Mail, Lock, RefreshCw } from 'lucide-react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useAttempt } from '../hooks/useAttempt';
-import { useTimer } from '../hooks/useTimer';
-import { useAntiCheat } from '../hooks/useAntiCheat';
-import { AttemptLayout } from '../components/AttemptLayout';
-import { AttemptModal, type ModalType } from '../components/AttemptModal';
 import { useThemeContext } from '../../../../context/ThemeContext';
-import { getQuestionStatusArray } from '../utils/attemptHelpers';
-import { previewTest } from '../services/attemptApi';
-import toast from 'react-hot-toast';
-import axios from 'axios';
+import { AttemptLayout } from '../components/AttemptLayout';
+import { AttemptModal } from '../components/AttemptModal';
+import { useAttemptPage } from '../hooks/useAttemptPage';
 
 export const AttemptPage: React.FC = () => {
-  const { shareToken } = useParams<{ shareToken: string }>();
-  const navigate = useNavigate();
   const { mode } = useThemeContext();
   const isLightMode = mode === 'light';
 
-  const { 
-    test, attempt, answers, reviewFlags, visitedQuestions, 
-    startAttempt, saveAnswer, submitTest, toggleReviewFlag, markVisited 
-  } = useAttempt();
-
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [modalState, setModalState] = useState<{ isOpen: boolean; type: ModalType; message?: string }>({ 
-    isOpen: false, type: 'submit' 
-  });
-  
-  const [lobbyState, setLobbyState] = useState<'loading' | 'preview' | 'countdown' | 'started'>('loading');
-  const [previewData, setPreviewData] = useState<any>(null);
-  const [countdown, setCountdown] = useState(10);
-  const [blockedMessage, setBlockedMessage] = useState<string | null>(null);
-  
-  // Email verification modal state - OTP based flow
-  const [showEmailVerification, setShowEmailVerification] = useState(false);
-  const [emailVerifyStep, setEmailVerifyStep] = useState<'email' | 'otp'>('email');
-  const [verifyEmail, setVerifyEmail] = useState('');
-  const [verificationId, setVerificationId] = useState<string>('');
-  const [otpInput, setOtpInput] = useState('');
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [verificationToken, setVerificationToken] = useState<string | null>(null);
-  const [attemptsRemaining, setAttemptsRemaining] = useState(5);
-  const [otpExpiry, setOtpExpiry] = useState<number>(0);
-  const [emailVerified, setEmailVerified] = useState(false);
-  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
-  
-  const startTimeRef = useRef(Date.now());
-
-  const handleTimeUp = useCallback(async () => {
-    setModalState({ isOpen: true, type: 'timeout' });
-    await submitTest();
-    navigate(`/attempt/result/${attempt?._id}`);
-  }, [submitTest, navigate, attempt?._id]);
-
-  const { timeLeft, isWarning, startTimer, stopTimer } = useTimer(test?.durationMinutes ? test.durationMinutes * 60 : 0, handleTimeUp);
-
-  const handleViolation = useCallback((type: string) => {
-    let msg = '';
-    if (type === 'tab_switch') msg = 'You switched tabs or minimized the window. This has been recorded.';
-    if (type === 'right_click') msg = 'Right-clicking is disabled during the test.';
-    if (type === 'copy_paste') msg = 'Copying and pasting is disabled during the test.';
+  const {
+    // Attempt data
+    test,
+    attempt,
+    answers,
+    reviewFlags,
     
-    setModalState({ isOpen: true, type: 'warning', message: msg });
-  }, []);
-
-  const { startAntiCheat, stopAntiCheat } = useAntiCheat(handleViolation);
-
-  useEffect(() => {
-    if (shareToken && lobbyState === 'loading' && !previewData) {
-      previewTest(shareToken).then(res => {
-        if (res.success && res.data) {
-          setPreviewData(res.data);
-          
-          // Check if user is blocked
-          if (res.data.isBlocked) {
-            setBlockedMessage(res.data.blockedMessage || 'You have been blocked from this test. Please contact the admin to unblock you.');
-            setLobbyState('preview');
-          } 
-          // Check if email verification is required (private test without authentication)
-          else if (res.data.requiresEmailVerification) {
-            setShowEmailVerification(true);
-            setEmailVerified(false);
-            setLobbyState('preview');
-          }
-          else {
-            setLobbyState('preview');
-          }
-        } else {
-          // Even if preview fails, if it's a private test error (403), try to show email verification
-          if (res.status === 403 || (res.error && res.error.includes('email'))) {
-            // This is likely a private test - try to show email verification anyway
-            setPreviewData({ 
-              requiresEmailVerification: true,
-              visibility: 'private'
-            } as any);
-            setShowEmailVerification(true);
-            setLobbyState('preview');
-          } else {
-            toast.error(res.error || 'Failed to load test');
-            navigate('/dashboard');
-          }
-        }
-      });
-    }
-  }, [shareToken, lobbyState, previewData, navigate]);
-
-  useEffect(() => {
-    if (lobbyState === 'countdown') {
-      if (countdown > 0) {
-        const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
-        return () => clearTimeout(timer);
-      } else {
-        setLobbyState('loading');
-        if (shareToken) {
-          // For unregistered candidates who verified their email, pass the email
-          // For authenticated users, the API will use their JWT token instead
-          const candidateEmail = verifiedEmail || (verifyEmail && verificationToken ? verifyEmail : undefined);
-          console.log('📊 Starting test with:', { 
-            verifyEmail, 
-            verifiedEmail,
-            verificationToken: verificationToken ? 'SET' : 'NOT SET',
-            candidateEmail,
-            emailVerified 
-          });
-          startAttempt(shareToken, candidateEmail).then(success => {
-            if (success) {
-              setLobbyState('started');
-            } else {
-              navigate('/dashboard');
-            }
-          });
-        }
-      }
-    }
-  }, [lobbyState, countdown, shareToken, startAttempt, navigate, verifyEmail, verificationToken]);
-
-  const handleStartResumeClick = () => {
-    // If the candidate has already verified email, allow resume without re-opening the OTP modal
-    if (previewData?.requiresEmailVerification && !emailVerified && !previewData?.emailAssigned) {
-      setShowEmailVerification(true);
-      return;
-    }
+    // UI state
+    currentIndex,
+    isFullscreen,
+    modalState,
+    lobbyState,
+    previewData,
+    countdown,
+    blockedMessage,
     
-    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(err => console.warn(err));
-    }
-    setLobbyState('countdown');
-  };
-
-  const handleSendOTP = async () => {
-    if (!verifyEmail) {
-      toast.error('Please enter your email');
-      return;
-    }
-
-    setIsVerifying(true);
-    try {
-      const response = await axios.post('/api/v1/email-verification/send-otp', {
-        email: verifyEmail,
-        testToken: shareToken
-      });
-
-      if (response.data.success) {
-        setVerificationId(response.data.data.verificationId);
-        setOtpExpiry(response.data.data.expiresIn);
-        setAttemptsRemaining(5);
-        setEmailVerifyStep('otp');
-        toast.success('OTP sent to your email!');
-      } else {
-        toast.error(response.data.message || 'Failed to send OTP');
-      }
-    } catch (error: any) {
-      // Handle specific error cases - show most specific error first
-      if (error.response?.status === 403) {
-        toast.error('❌ This email is not assigned to this test. Please contact the admin.');
-      } else if (error.response?.status === 404) {
-        toast.error('Test not found. Please check the link and try again.');
-      } else if (error.response?.status === 400) {
-        toast.error(error.response?.data?.message || 'Invalid email format');
-      } else {
-        const errorMsg = error.response?.data?.message || error.message || 'Failed to send OTP';
-        toast.error(errorMsg);
-      }
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
-  const handleVerifyOTP = async () => {
-    if (!otpInput || otpInput.length !== 6) {
-      toast.error('Please enter a valid 6-digit OTP');
-      return;
-    }
-
-    setIsVerifying(true);
-    try {
-      const response = await axios.post('/api/v1/email-verification/verify-otp', {
-        verificationId,
-        otp: otpInput
-      });
-
-      if (response.data.success) {
-        setVerificationToken(response.data.data.verificationToken);
-        toast.success('✅ Email verified successfully!', { duration: 3000 });
-        setShowEmailVerification(false);
-        setEmailVerified(true);
-        setVerifiedEmail(verifyEmail); // Store the verified email
-        setPreviewData(prev => prev ? {
-          ...prev,
-          requiresEmailVerification: false,
-          emailAssigned: true
-        } : prev);
-        // Reset form
-        setEmailVerifyStep('email');
-        setOtpInput('');
-      } else {
-        toast.error(response.data.message || 'OTP verification failed');
-        if (response.data.data?.attemptsRemaining !== undefined) {
-          setAttemptsRemaining(response.data.data.attemptsRemaining);
-        }
-      }
-    } catch (error: any) {
-      const errorMsg = error.response?.data?.message || error.message || 'OTP verification failed';
-      toast.error(errorMsg);
-      
-      if (error.response?.status === 429) {
-        toast.error('Too many attempts. Please request a new OTP.');
-        setEmailVerifyStep('email');
-      } else if (error.response?.status === 401) {
-        if (error.response.data?.expired) {
-          setEmailVerifyStep('email');
-          toast.error('OTP has expired. Please request a new one.');
-        }
-        const remaining = error.response.data?.data?.attemptsRemaining;
-        if (remaining !== undefined) {
-          setAttemptsRemaining(remaining);
-        }
-      }
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
-  const handleResendOTP = async () => {
-    setIsVerifying(true);
-    try {
-      const response = await axios.post('/api/v1/email-verification/resend-otp', {
-        verificationId
-      });
-
-      if (response.data.success) {
-        setOtpExpiry(response.data.data.expiresIn);
-        setAttemptsRemaining(5);
-        setOtpInput('');
-        toast.success('New OTP sent to your email!');
-      }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to resend OTP');
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
-  // OTP expiry timer
-  useEffect(() => {
-    if (otpExpiry > 0 && emailVerifyStep === 'otp') {
-      const timer = setInterval(() => {
-        setOtpExpiry(prev => {
-          if (prev <= 1) {
-            setEmailVerifyStep('email');
-            toast.error('OTP has expired. Please request a new one.');
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [otpExpiry, emailVerifyStep]);
-
-  useEffect(() => {
-    if (test && attempt) {
-      startTimer();
-      startAntiCheat();
-      // Mark first question visited
-      if (test.questions.length > 0) {
-        markVisited(test.questions[0].id);
-      }
-    }
-    return () => {
-      stopTimer();
-      stopAntiCheat();
-    };
-  }, [test, attempt, startTimer, startAntiCheat, markVisited]);
-
-  const handleToggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().then(() => setIsFullscreen(true));
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen().then(() => setIsFullscreen(false));
-      }
-    }
-  };
-
-  const handleSelectOption = (optionId: string) => {
-    if (!test) return;
-    const q = test.questions[currentIndex];
-    const currentAns = answers[q.id];
-    let newOptions = [optionId];
-
-    if (q.allowMultiple) {
-      if (currentAns?.selectedOptions.includes(optionId)) {
-        newOptions = currentAns.selectedOptions.filter(id => id !== optionId);
-      } else {
-        newOptions = [...(currentAns?.selectedOptions || []), optionId];
-      }
-    }
+    // Email verification
+    showEmailVerification,
+    emailVerifyStep,
+    verifyEmail,
+    otpInput,
+    isVerifying,
+    attemptsRemaining,
+    otpExpiry,
+    emailVerified,
     
-    const timeSpent = Math.floor((Date.now() - startTimeRef.current) / 1000);
-    startTimeRef.current = Date.now();
-    saveAnswer(q.id, newOptions, timeSpent);
-  };
+    // Timer & security
+    timeLeft,
+    isWarning,
+    
+    // Computed values
+    questionStatuses,
+    
+    // Handlers
+    handleSelectOption,
+    handleNavigate,
+    handleSaveAndNext,
+    handlePrevious,
+    handleToggleReview,
+    handleToggleFullscreen,
+    handleSubmitConfirm,
+    handleStartResumeClick,
+    handleSendOTP,
+    handleVerifyOTP,
+    handleResendOTP,
+    
+    // Setters
+    setCountdown,
+    setEmailVerifyStep,
+    setVerifyEmail,
+    setOtpInput,
+    setModalState,
+    setShowEmailVerification,
+  } = useAttemptPage();
 
-  const handleNavigate = (index: number) => {
-    if (!test) return;
-    setCurrentIndex(index);
-    markVisited(test.questions[index].id);
-    startTimeRef.current = Date.now();
-  };
-
-  const handleSaveAndNext = () => {
-    if (!test) return;
-    if (currentIndex < test.questions.length - 1) {
-      handleNavigate(currentIndex + 1);
-    } else {
-      setModalState({ isOpen: true, type: 'submit' });
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentIndex > 0) handleNavigate(currentIndex - 1);
-  };
-
-  const handleToggleReview = () => {
-    if (!test) return;
-    toggleReviewFlag(test.questions[currentIndex].id);
-  };
-
-  const handleSubmitConfirm = async () => {
-    setModalState({ ...modalState, isOpen: false });
-    const success = await submitTest();
-    if (success && attempt) {
-      navigate(`/attempt/result/${attempt._id}`);
-    }
-  };
-
+  // ============ LOADING STATE ============
   if (lobbyState === 'loading') {
     return (
       <div className={`min-h-screen flex items-center justify-center ${isLightMode ? 'bg-slate-50' : 'bg-[#0d1117]'}`}>
@@ -374,6 +73,7 @@ export const AttemptPage: React.FC = () => {
     );
   }
 
+  // ============ PREVIEW / COUNTDOWN STATE ============
   if (lobbyState === 'preview' || lobbyState === 'countdown') {
     return (
       <div className={`min-h-screen flex items-center justify-center p-6 ${isLightMode ? 'bg-slate-50' : 'bg-[#0d1117]'}`}>
@@ -390,7 +90,7 @@ export const AttemptPage: React.FC = () => {
                 </div>
               </div>
               <h2 className={`text-2xl font-bold ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
-                Email Verified Successfully! ✅
+                Email Verified Successfully! 
               </h2>
               <p className={`text-sm ${isLightMode ? 'text-slate-600' : 'text-slate-400'}`}>
                 Your email has been verified. You're ready to start the test.
@@ -403,7 +103,6 @@ export const AttemptPage: React.FC = () => {
                       document.documentElement.requestFullscreen().catch(err => console.warn(err));
                     }
                     setCountdown(10);
-                    setLobbyState('countdown');
                   }}
                   className="w-full py-4 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-all"
                 >
@@ -629,6 +328,7 @@ export const AttemptPage: React.FC = () => {
     );
   }
 
+  // ============ LOADING TEST DATA STATE ============
   if (!test || !attempt) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${isLightMode ? 'bg-slate-50' : 'bg-[#0d1117]'}`}>
@@ -637,13 +337,10 @@ export const AttemptPage: React.FC = () => {
     );
   }
 
-  const currentQuestion = test.questions[currentIndex];
-  const questionStatuses = getQuestionStatusArray(test.questions, Object.values(answers), reviewFlags, visitedQuestions);
-  const answeredCount = questionStatuses.filter(q => q.status === 'answered').length;
-
+  // ============ FULLSCREEN REQUIRED STATE ============
   if (test && attempt && !isFullscreen) {
     return (
-      <div className={`fixed inset-0 z-[9999] flex items-center justify-center ${isLightMode ? 'bg-slate-50' : 'bg-[#0d1117]'}`}>
+      <div className={`fixed inset-0 z-9999 flex items-center justify-center ${isLightMode ? 'bg-slate-50' : 'bg-[#0d1117]'}`}>
         <div className={`p-8 max-w-lg w-full rounded-3xl shadow-2xl text-center border ${isLightMode ? 'bg-white border-slate-200' : 'bg-[#161b22] border-white/10'}`}>
           <Maximize size={64} className="mx-auto text-indigo-500 mb-6" />
           <h2 className={`text-2xl font-bold mb-4 ${isLightMode ? 'text-slate-900' : 'text-white'}`}>Fullscreen Required</h2>
@@ -662,6 +359,10 @@ export const AttemptPage: React.FC = () => {
       </div>
     );
   }
+
+  // ============ ACTIVE TEST STATE ============
+  const currentQuestion = test.questions[currentIndex];
+  const answeredCount = questionStatuses.filter(q => q.status === 'answered').length;
 
   return (
     <>

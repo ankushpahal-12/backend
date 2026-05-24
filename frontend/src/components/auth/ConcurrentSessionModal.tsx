@@ -8,7 +8,7 @@ import {
     Stack
 } from '@mui/material';
 import { Warning as WarningIcon, Devices as DevicesIcon, Close as CloseIcon } from '@mui/icons-material';
-import Button from '../ui/Button';
+import {Button} from '../ui/button';
 
 interface ConcurrentSessionModalProps {
     open: boolean;
