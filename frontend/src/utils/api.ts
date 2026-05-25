@@ -3,6 +3,17 @@ import { ENV } from '../config/env';
 import { isLikelyOfflineError } from '../system/network/utils/network.utils';
 import { enqueueRetryRequest, type RetryMethod } from '../system/network/services/retryQueue.service';
 
+const getApiBaseUrl = () => {
+    let url = ENV.apiUrl;
+    if (url.endsWith('/')) {
+        url = url.slice(0, -1);
+    }
+    if (!url.endsWith('/api')) {
+        url = `${url}/api`;
+    }
+    return url;
+};
+
 const CSRF_TOKEN_STORAGE_KEY = 'csrf-token';
 const CSRF_REFRESH_STORAGE_KEY = 'csrf-token-refresh';
 const CSRF_TOKEN_EXPIRY_MS = 60 * 60 * 1000;
@@ -72,7 +83,7 @@ const fetchCSRFToken = async (retryCount = 0): Promise<string | null> => {
 
     csrfTokenPromise = (async () => {
         try {
-            const response = await fetch(`${ENV.apiUrl}/v1/csrf-token`, {
+            const response = await fetch(`${getApiBaseUrl()}/v1/csrf-token`, {
                 method: 'GET',
                 credentials: 'include',
                 signal: AbortSignal.timeout(5000), // 5 second timeout
@@ -147,7 +158,7 @@ export const initializeCSRFToken = async () => {
 };
 
 const api = axios.create({
-    baseURL: ENV.apiUrl,
+    baseURL: getApiBaseUrl(),
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
@@ -219,7 +230,7 @@ api.interceptors.response.use(
 
         if (isOfflineFailure && cfg) {
             const rawUrl = cfg.url as string;
-            const baseURL = (cfg.baseURL ?? ENV.apiUrl).replace(/\/$/, '');
+            const baseURL = (cfg.baseURL ?? getApiBaseUrl()).replace(/\/$/, '');
             const absoluteUrl = /^https?:\/\//i.test(rawUrl)
                 ? rawUrl
                 : `${baseURL}${rawUrl.startsWith('/') ? '' : '/'}${rawUrl}`;

@@ -318,8 +318,8 @@ export const hideStackTraces = (err, req, res, next) => {
     }
 
     // In production, never expose stack traces
-    const statusCode = err.statusCode || 500;
-    const message = err.isOperational ? err.message : 'Internal server error';
+    const statusCode = err.statusCode || (Number.isInteger(err.status) ? err.status : 500);
+    const message = err.isOperational || statusCode === 404 ? err.message : 'Internal server error';
 
     res.status(statusCode).json({
         status: 'error',
