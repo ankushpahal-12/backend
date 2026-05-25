@@ -148,7 +148,7 @@ export const ipBlacklistMiddleware = (req, res, next) => {
     }
      // Check whitelist first
     if (whitelistedIPs.has(clientIP)||
-        whitelistedIPs.has(rawIP) ||
+        whitelistedIPs.has(rawIp) ||
         clientIP.startsWith('10.') || 
         clientIP.startsWith('172.') || 
         clientIP.startsWith('192.168.')) {
