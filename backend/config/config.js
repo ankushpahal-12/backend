@@ -41,7 +41,7 @@ const config = {
         port: process.env.EMAIL_PORT || 2525,
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
-        secure:process.env.EMAIL_SECURE,
+        secure: process.env.EMAIL_SECURE === 'true',
         from: process.env.EMAIL_FROM || 'no-reply@aifinance.com',
         securityFrom: process.env.EMAIL_SECURITY_FROM || 'security@aifinance.com'
     },

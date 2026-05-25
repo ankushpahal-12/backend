@@ -22,7 +22,7 @@ export interface SecurityStats {
  */
 export const getSecurityLog = async () => {
     try {
-        const response = await api.get('/api/security/log');
+        const response = await api.get('/api/v1/security/log');
         return response.data;
     } catch (error) {
         throw new Error('Failed to fetch security logs', { cause: error });
@@ -34,7 +34,7 @@ export const getSecurityLog = async () => {
  */
 export const getSecurityStats = async () => {
     try {
-        const response = await api.get('/api/security/stats');
+        const response = await api.get('/api/v1/security/stats');
         return response.data;
     } catch (error) {
         throw new Error('Failed to fetch security statistics', { cause: error });
@@ -46,7 +46,7 @@ export const getSecurityStats = async () => {
  */
 export const reportSecurityEvent = async (eventType: string, detail: string) => {
     try {
-        await api.post('/api/security/event', {
+        await api.post('/api/v1/security/event', {
             type: eventType,
             detail,
         });
