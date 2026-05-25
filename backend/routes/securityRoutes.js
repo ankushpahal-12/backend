@@ -16,6 +16,7 @@ const secEventLimit = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     message: { status: 'error', message: 'Too many security events from this IP' },
+    skip: (req) => req.method === 'OPTIONS', // Don't count CORS preflight requests
 });
 
 // POST /api/security/event
@@ -42,11 +43,14 @@ router.post('/event', secEventLimit, (req, res) => {
     if (securityLog.length >= MAX_LOG) securityLog.shift();
     securityLog.push(entry);
 
-    // Flag high-severity events
+    // Flag high-severity events (suppress routine page_security_applied events to reduce noise)
     const HIGH_SEVERITY = ['automation_detected', 'dom_injection', 'csp_violation'];
+    const ROUTINE_EVENTS = ['page_security_applied']; // Low-noise events that don't need logging
+    
     if (HIGH_SEVERITY.includes(entry.type)) {
         console.warn(`[SECURITY HIGH] ${entry.type} | ${entry.detail} | IP: ${entry.ip} | UA: ${entry.ua.slice(0, 60)}`);
-    } else {
+    } else if (!ROUTINE_EVENTS.includes(entry.type)) {
+        // Only log security events that are not in the routine list
         console.info(`[SECURITY] ${entry.type} | ${entry.detail} | ${entry.ip}`);
     }
 
@@ -112,6 +116,7 @@ const auditLogLimit = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     message: { status: 'error', message: 'Too many audit log entries' },
+    skip: (req) => req.method === 'OPTIONS', // Don't count CORS preflight requests
 });
 
 router.post('/audit-log', auditLogLimit, (req, res) => {

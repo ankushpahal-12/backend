@@ -146,7 +146,7 @@ const corsOptions = {
         if(allowedOrigins.includes(origin)){
             return callback(null, true);
         }
-        
+
         if (config.allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
@@ -188,13 +188,14 @@ if (config.env === 'development') {
     app.use(morgan('combined'));
 }
 
-// Global Rate Limiting
+// Global Rate Limiting (skip CORS preflight OPTIONS requests)
 const limiter = rateLimit({
     max: config.rateLimit.apiMax,
     windowMs: config.rateLimit.apiWindowMs,
     message: 'Too many requests from this IP, please try again in 15 minutes!',
     standardHeaders: true,
     legacyHeaders: false,
+    skip: (req) => req.method === 'OPTIONS', // Don't count CORS preflight requests
 });
 app.use('/api', limiter);
 

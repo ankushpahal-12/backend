@@ -52,7 +52,7 @@ const normaliseIp=(ip)=>{
     catch(error){
         console.error(`[SECURITY] Error normalising IP: ${trimmedIp}} :, ${error.message}`);
     }
-    return trimmedIP;
+    return trimmedIp;
 };
 /**
  * Convert IP string to number for range comparison

@@ -27,6 +27,7 @@ const buildLimiter = (windowMs, max, message) => rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    skip: (req) => req.method === 'OPTIONS', // Don't count CORS preflight requests
 });
 
 // General rate limit for most auth routes
@@ -39,6 +40,7 @@ const authLimit = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    skip: (req) => req.method === 'OPTIONS', // Don't count CORS preflight requests
 });
 
 // Stricter rate limit for the actual login/register endpoints (prevent brute force)
@@ -88,11 +90,13 @@ const adminLoginLimit = buildLimiter(
 
 // Pre-auth session initialization (lenient rate-limit — lightweight operation called frequently)
 // Allow 100 requests per minute (1.67/sec) to accommodate navigation buttons and retries
+// CORS preflight OPTIONS requests are automatically skipped by buildLimiter
 const sessionInitLimit = buildLimiter(
     60 * 1000,  // 1 minute window
     100,        // 100 requests per minute
     'Too many session initialization requests. Please try again in a moment.'
 );
+
 router.post('/init-session', sessionInitLimit, initSession);
 
 // Routes

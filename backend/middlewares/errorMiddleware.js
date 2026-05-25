@@ -31,7 +31,11 @@ const handleJWTExpiredError = () => new AppError('Your token has expired! Please
 
 const sendErrorDev = (err, res) => {
     // Log stack trace to server console only — never expose it to API clients
-    console.error('[DEV ERROR]', err.stack || err);
+    // Suppress expected 401 errors (not logged in) on /users/me endpoint to reduce noise
+    const isExpectedUnauthorized = err.statusCode === 401 && err.message.includes('not logged in');
+    if (!isExpectedUnauthorized) {
+        console.error('[DEV ERROR]', err.stack || err);
+    }
     res.status(err.statusCode).json({
         status: err.status,
         message: err.message,
