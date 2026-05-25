@@ -11,6 +11,14 @@ import { initializeCSRFToken } from './utils/api'
 import { initMonitoring } from './features/support_chatBot/monitoring/sessionManager'
 import {TooltipProvider}from "@/components/ui/tooltip"
 
+// Extend Window interface for security script globals
+declare global {
+    interface Window {
+        __API_BASE__?: string;
+        __VITE_API_URL?: string;
+    }
+}
+
 // ── Expose API configuration to pre-React security scripts ──
 // security.js and advanced-protection.js (loaded in index.html head) check these globals
 // to determine where to send security events. This must happen early in React initialization.
