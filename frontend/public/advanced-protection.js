@@ -441,9 +441,17 @@
 
     function reportSecurityEvent(type, detail) {
         try {
-            var apiBase = global.location.hostname === 'localhost' && global.location.port === '5173'
-                ? 'http://localhost:5000'
-                : global.location.origin;
+            // Determine API base URL with priority order:
+            // 1. Use global __API_BASE__ if explicitly set (for Vercel/production deployments)
+            // 2. Use VITE_API_URL if available (injected by frontend)
+            // 3. Local dev: http://localhost:5000
+            // 4. Production default: same origin
+            var apiBase = global.__API_BASE__ ||
+                global.__VITE_API_URL ||
+                (global.location.hostname === 'localhost' && global.location.port === '5173'
+                    ? 'http://localhost:5000'
+                    : global.location.origin);
+            
             var payload = JSON.stringify({
                 type: type,
                 detail: detail,
