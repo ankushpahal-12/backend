@@ -235,14 +235,16 @@ const SuccessModal = ({ open, countdown }: { open: boolean, countdown: number })
             <DialogActions sx={{ justifyContent: 'center', pb: 4 }}>
                 <Button
                     onClick={() => navigate('/user/login')}
-                    variant="contained"
-                    fullWidth
-                    sx={{
-                        mx: 4,
-                        py: 1.5,
-                        borderRadius: 2,
+                    variant="default"
+                    className="w-full"
+                    style={{
+                        marginLeft: '1.5rem',
+                        marginRight: '1.5rem',
+                        padding: '0.75rem',
+                        borderRadius: '0.5rem',
                         background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
                         fontWeight: 900,
+                        color: 'white',
                         textTransform: 'none'
                     }}
                 >
@@ -404,28 +406,24 @@ const ResetPassword = () => {
                                         />
 
                                         <Button
-                                            fullWidth
-                                            size="large"
+                                            className="w-full"
+                                            size="lg"
                                             type="submit"
-                                            variant="contained"
+                                            variant="default"
                                             disabled={isLoading || otp.length < 6 || !password}
-                                            sx={{
-                                                py: 2,
-                                                borderRadius: 2,
+                                            style={{
+                                                padding: '1rem',
+                                                borderRadius: '0.5rem',
                                                 fontWeight: 900,
                                                 fontSize: '1rem',
                                                 textTransform: 'none',
                                                 background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
                                                 boxShadow: `0 8px 16px ${alpha('#6366F1', 0.25)}`,
-                                                '&:hover': {
-                                                    background: 'linear-gradient(135deg, #4F46E5 0%, #3730A3 100%)',
-                                                    transform: 'translateY(-1px)',
-                                                    boxShadow: `0 12px 20px ${alpha('#6366F1', 0.35)}`
-                                                },
-                                                transition: 'all 0.2s ease'
+                                                transition: 'all 0.2s ease',
+                                                color: 'white'
                                             }}
                                         >
-                                            {isLoading ? 'Changing Password...' : 'Update Password'}
+                                            Reset Password
                                         </Button>
                                     </Stack>
                                 </Box>

@@ -285,14 +285,18 @@ const ForgotPassword = () => {
                                                 />
 
                                                 <Button
-                                                    fullWidth
-                                                    size="large"
+                                                    className="w-full"
+                                                    size="lg"
                                                     type="submit"
-                                                    variant="contained"
-                                                    color="primary"
-                                                    gradient
+                                                    variant="default"
                                                     disabled={isLoading || !email}
-                                                    sx={{ py: 1.5 }}
+                                                    style={{
+                                                        padding: '0.75rem',
+                                                        borderRadius: '0.5rem',
+                                                        background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
+                                                        fontWeight: 900,
+                                                        color: 'white'
+                                                    }}
                                                 >
                                                     Send Reset Code
                                                 </Button>

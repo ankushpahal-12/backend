@@ -216,12 +216,19 @@ export const EmailVerificationPage = () => {
 
                 <Button
                   onClick={handleVerifyOTP}
-                  variant="contained"
-                  fullWidth
+                  variant="default"
+                  className="w-full"
                   disabled={otpLoading || !otp.trim()}
-                  startIcon={otpLoading ? <CircularProgress size={20} /> : undefined}
+                  style={{ background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)', color: 'white', fontWeight: 900 }}
                 >
-                  {otpLoading ? 'Verifying...' : 'Verify OTP'}
+                  {otpLoading ? (
+                    <>
+                      <CircularProgress size={20} style={{ marginRight: '0.5rem' }} />
+                      Verifying...
+                    </>
+                  ) : (
+                    'Verify OTP'
+                  )}
                 </Button>
               </Stack>
             )}
@@ -265,12 +272,19 @@ export const EmailVerificationPage = () => {
 
                 <Button
                   onClick={handleSetPassword}
-                  variant="contained"
-                  fullWidth
+                  variant="default"
+                  className="w-full"
                   disabled={passwordLoading || !password.trim() || !confirmPassword.trim()}
-                  startIcon={passwordLoading ? <CircularProgress size={20} /> : undefined}
+                  style={{ background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)', color: 'white', fontWeight: 900 }}
                 >
-                  {passwordLoading ? 'Setting up...' : 'Complete Setup'}
+                  {passwordLoading ? (
+                    <>
+                      <CircularProgress size={20} style={{ marginRight: '0.5rem' }} />
+                      Setting up...
+                    </>
+                  ) : (
+                    'Complete Setup'
+                  )}
                 </Button>
               </Stack>
             )}

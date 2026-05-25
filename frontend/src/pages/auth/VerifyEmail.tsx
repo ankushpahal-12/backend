@@ -298,13 +298,17 @@ const VerifyEmail = () => {
                     <Divider sx={{ mb: 4, borderColor: alpha('#FFF', 0.05) }} />
 
                     <Button
-                        fullWidth
+                        className="w-full"
                         onClick={() => window.location.href = '/user/dashboard'}
-                        variant="contained"
-                        sx={{
-                            py: 2, borderRadius: 2, fontWeight: 900, fontSize: '1rem', textTransform: 'none',
+                        variant="default"
+                        style={{
+                            padding: '1rem',
+                            borderRadius: '0.5rem',
+                            fontWeight: 900,
+                            fontSize: '1rem',
+                            textTransform: 'none',
                             background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
-                            '&:hover': { transform: 'translateY(-1px)', boxShadow: `0 12px 20px ${alpha('#6366F1', 0.35)}` }
+                            color: 'white'
                         }}
                     >
                         Go to Dashboard
@@ -433,18 +437,18 @@ const VerifyEmail = () => {
                                         </Box>
 
                                         <Button
-                                            fullWidth size="large" type="submit" variant="contained"
+                                            className="w-full" size="lg" type="submit" variant="default"
                                             disabled={isLoading || otpValues.some(v => !v) || isLockedOut}
-                                            sx={{
-                                                py: 2, borderRadius: 2, fontWeight: 900, fontSize: '1rem', textTransform: 'none',
+                                            style={{
+                                                padding: '1rem',
+                                                borderRadius: '0.5rem',
+                                                fontWeight: 900,
+                                                fontSize: '1rem',
+                                                textTransform: 'none',
                                                 background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
                                                 boxShadow: `0 8px 16px ${alpha('#6366F1', 0.25)}`,
-                                                '&:hover': {
-                                                    background: 'linear-gradient(135deg, #4F46E5 0%, #3730A3 100%)',
-                                                    transform: 'translateY(-1px)',
-                                                    boxShadow: `0 12px 20px ${alpha('#6366F1', 0.35)}`
-                                                },
-                                                transition: 'all 0.2s ease'
+                                                transition: 'all 0.2s ease',
+                                                color: 'white'
                                             }}
                                         >
                                             {isLoading ? 'Verifying...' : 'Verify Identity'}
@@ -460,13 +464,19 @@ const VerifyEmail = () => {
                                                     Missed the transmission?{' '}
                                                     <Button
                                                         type="button"
-                                                        variant="text"
+                                                        variant="ghost"
                                                         onClick={handleResend}
                                                         disabled={resendTimer > 0 || isLockedOut}
-                                                        sx={{
-                                                            fontWeight: 800, fontSize: 'inherit', minWidth: 'auto', padding: 0,
-                                                            color: (resendTimer > 0 || isLockedOut) ? 'text.disabled' : 'primary.light',
-                                                            '&:hover': { background: 'transparent', textDecoration: 'underline' }
+                                                        style={{
+                                                            fontWeight: 800,
+                                                            fontSize: 'inherit',
+                                                            minWidth: 'auto',
+                                                            padding: 0,
+                                                            color: (resendTimer > 0 || isLockedOut) ? '#999' : '#818CF8',
+                                                            background: 'transparent',
+                                                            border: 'none',
+                                                            cursor: (resendTimer > 0 || isLockedOut) ? 'not-allowed' : 'pointer',
+                                                            textDecoration: 'underline'
                                                         }}
                                                     >
                                                         {resendTimer > 0 ? `Retry in ${resendTimer}s` : 'Resend Code'}

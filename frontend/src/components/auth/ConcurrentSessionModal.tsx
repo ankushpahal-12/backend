@@ -65,22 +65,21 @@ const ConcurrentSessionModal = ({ open, onClose, onConfirm, activeSessionsCount 
             <DialogActions sx={{ p: 2, pt: 0 }}>
                 <Stack spacing={2} sx={{ width: '100%' }}>
                     <Button
-                        fullWidth
-                        variant="contained"
-                        gradient
+                        className="w-full"
+                        variant="default"
                         onClick={onConfirm}
-                        startIcon={<DevicesIcon />}
+                        style={{ background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)', color: 'white', fontWeight: 900 }}
                     >
+                        <DevicesIcon style={{ marginRight: '0.5rem' }} />
                         Use Here & Logout Others
                     </Button>
                     <Button
-                        fullWidth
-                        variant="outlined"
+                        className="w-full"
+                        variant="outline"
                         onClick={onClose}
-                        startIcon={<CloseIcon />}
-                        sx={{ color: 'text.secondary', borderColor: 'divider' }}
                     >
-                        Logout from this tab
+                        <CloseIcon style={{ marginRight: '0.5rem' }} />
+                        Cancel & Stay
                     </Button>
                 </Stack>
             </DialogActions>

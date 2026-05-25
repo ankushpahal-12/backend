@@ -252,27 +252,20 @@ const Register = () => {
 
                                     <Stack spacing={3}>
                                         <Button
-                                            fullWidth
-                                            size="large"
-                                            variant="contained"
                                             onClick={() => setAuthMethod('email')}
-                                            startIcon={<PersonAdd />}
-                                            sx={{
-                                                py: 2,
-                                                borderRadius: 2,
+                                            style={{
+                                                padding: '1rem',
+                                                borderRadius: '0.5rem',
                                                 fontWeight: 900,
                                                 fontSize: '1rem',
                                                 textTransform: 'none',
                                                 background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
                                                 boxShadow: `0 8px 16px ${alpha('#6366F1', 0.25)}`,
-                                                '&:hover': {
-                                                    background: 'linear-gradient(135deg, #4F46E5 0%, #3730A3 100%)',
-                                                    transform: 'translateY(-1px)',
-                                                    boxShadow: `0 12px 20px ${alpha('#6366F1', 0.35)}`
-                                                },
-                                                transition: 'all 0.2s ease'
+                                                transition: 'all 0.2s ease',
+                                                color: 'white'
                                             }}
                                         >
+                                            <PersonAdd style={{ marginRight: '0.5rem' }} />
                                             Signup with Email
                                         </Button>
 
@@ -526,35 +519,22 @@ const Register = () => {
                                                 </Box>
                                             ) : (
                                                 <Button
-                                                    size="medium"
                                                     type="submit"
-                                                    variant="contained"
+                                                    variant="default"
                                                     disabled={isLoading || isBreached || isEmailRegistered || !termsAccepted}
-                                                    startIcon={<PersonAdd sx={{ fontSize: 18 }} />}
-                                                    sx={{
-                                                        py: 1.2,
-                                                        px: 4,
-                                                        borderRadius: 2,
+                                                    style={{
+                                                        padding: '0.75rem 1.5rem',
+                                                        borderRadius: '0.5rem',
                                                         fontWeight: 900,
                                                         fontSize: '0.85rem',
                                                         textTransform: 'none',
                                                         background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
                                                         boxShadow: `0 8px 16px ${alpha('#6366F1', 0.25)}`,
-                                                        '&:hover': {
-                                                            background: 'linear-gradient(135deg, #4F46E5 0%, #3730A3 100%)',
-                                                            transform: 'translateY(-1px)',
-                                                            boxShadow: `0 12px 20px ${alpha('#6366F1', 0.35)}`
-                                                        },
-                                                        transition: 'all 0.2s ease',
-                                                        marginLeft: 'auto',
-                                                        marginRight: 'auto',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: 0.8,
-                                                        mt: -4
+                                                        color: 'white'
                                                     }}
                                                 >
-                                                    Signup
+                                                    <PersonAdd style={{ fontSize: 18, marginRight: '0.5rem' }} />
+                                                    Sign Up
                                                 </Button>
                                             )}
 

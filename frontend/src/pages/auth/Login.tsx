@@ -421,22 +421,23 @@ const Login = () => {
                                             <Stack spacing={3}>
                                                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                                                     <Button
-                                                        fullWidth
-                                                        size="large"
-                                                        variant="contained"
+                                                        className="w-full"
+                                                        size="lg"
+                                                        variant="default"
                                                         onClick={() => setAuthMethod('email')}
-                                                        startIcon={<LoginIcon />}
-                                                        sx={{
-                                                            py: 2,
-                                                            borderRadius: 2,
+                                                        style={{
+                                                            padding: '1rem',
+                                                            borderRadius: '0.5rem',
                                                             fontWeight: 900,
-                                                            fontSize: { xs: '0.9rem', sm: '1rem' },
+                                                            fontSize: '1rem',
                                                             textTransform: 'none',
                                                             background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
                                                             boxShadow: `0 8px 16px ${alpha('#6366F1', 0.25)}`,
-                                                            transition: 'all 0.2s ease'
+                                                            transition: 'all 0.2s ease',
+                                                            color: 'white'
                                                         }}
                                                     >
+                                                        <LoginIcon style={{ marginRight: '0.5rem' }} />
                                                         Login with Email
                                                     </Button>
                                                 </motion.div>
@@ -447,22 +448,23 @@ const Login = () => {
 
                                                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                                                     <Button
-                                                        fullWidth
-                                                        variant="outlined"
-                                                        startIcon={<GoogleIcon />}
-                                                        sx={{
-                                                            py: 2,
-                                                            borderRadius: 2,
+                                                        
+                                                        className="w-full"
+                                                        variant="outline"
+                                                        style={{
+                                                            padding: '1rem',
+                                                            borderRadius: '0.5rem',
                                                             borderColor: isLightMode ? alpha('#1E293B', 0.18) : alpha('#FFF', 0.1),
-                                                            color: isLightMode ? 'text.primary' : 'white',
+                                                            color: isLightMode ? '#1E293B' : 'white',
                                                             fontWeight: 700,
-                                                            bgcolor: isLightMode ? alpha('#1E293B', 0.02) : alpha('#FFF', 0.02),
-                                                            fontSize: { xs: '0.9rem', sm: '1rem' },
+                                                            backgroundColor: isLightMode ? alpha('#1E293B', 0.02) : alpha('#FFF', 0.02),
+                                                            fontSize: '1rem',
                                                             textTransform: 'none',
                                                             backdropFilter: 'blur(5px)',
                                                             transition: 'all 0.2s ease'
                                                         }}
                                                     >
+                                                        <GoogleIcon style={{ marginRight: '0.5rem' }} />
                                                         Login with Google
                                                     </Button>
                                                 </motion.div>
@@ -598,25 +600,26 @@ const Login = () => {
 
                                                         <motion.div variants={itemVariants} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
                                                             <Button
-                                                                fullWidth
-                                                                size="large"
+                                                                className="w-full"
+                                                                size="lg"
                                                                 type="submit"
-                                                                variant="contained"
+                                                                variant="default"
                                                                 disabled={isLoading}
-                                                                startIcon={<LoginIcon />}
-                                                                sx={{
-                                                                    py: 2,
-                                                                    borderRadius: 2,
-                                                                        fontWeight: 900,
-                                                                        fontSize: { xs: '0.9rem', sm: '1rem' },
-                                                                        textTransform: 'none',
-                                                                        background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
-                                                                        boxShadow: `0 8px 16px ${alpha('#6366F1', 0.25)}`,
-                                                                        transition: 'all 0.2s ease'
-                                                                    }}
-                                                                >
-                                                                    Login
-                                                                </Button>
+                                                                style={{
+                                                                    padding: '1rem',
+                                                                    borderRadius: '0.5rem',
+                                                                    fontWeight: 900,
+                                                                    fontSize: '1rem',
+                                                                    textTransform: 'none',
+                                                                    background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
+                                                                    boxShadow: `0 8px 16px ${alpha('#6366F1', 0.25)}`,
+                                                                    transition: 'all 0.2s ease',
+                                                                    color: 'white'
+                                                                }}
+                                                            >
+                                                                <LoginIcon style={{ marginRight: '0.5rem' }} />
+                                                                Login
+                                                            </Button>
                                                         </motion.div>
 
                                                         <motion.div variants={itemVariants} style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
@@ -709,12 +712,12 @@ const Login = () => {
                                                                 </Box>
                                                             ) : (
                                                                 <Button
-                                                                    fullWidth
-                                                                    size="large"
+                                                                    className="w-full"
+                                                                    size="lg"
                                                                     type="submit"
-                                                                    variant="contained"
+                                                                    variant="default"
                                                                     disabled={isLoading || otp.length < 6}
-                                                                    sx={{ py: 2.5, borderRadius: 3, fontWeight: 900, fontSize: '1.1rem' }}
+                                                                    style={{ padding: '1.25rem', borderRadius: '0.75rem', fontWeight: 900, fontSize: '1.1rem' }}
                                                                 >
                                                                     Finalize Sync
                                                                 </Button>
@@ -723,11 +726,11 @@ const Login = () => {
 
                                                         <Box sx={{ textAlign: 'center' }}>
                                                             <Button
-                                                                variant="text"
+                                                                variant="ghost"
                                                                 onClick={() => setStep(1)}
-                                                                startIcon={<KeyboardBackspace />}
-                                                                sx={{ color: 'text.secondary', fontWeight: 700, '&:hover': { color: isLightMode ? 'text.primary' : 'white' } }}
+                                                                style={{ color: '#999', fontWeight: 700 }}
                                                             >
+                                                                <KeyboardBackspace style={{ marginRight: '0.5rem' }} />
                                                                 Back to Primary Login
                                                             </Button>
                                                         </Box>
@@ -786,12 +789,13 @@ const Login = () => {
                                                                 </Box>
                                                             ) : (
                                                                 <Button
-                                                                    fullWidth size="large" type="submit" variant="contained"
+                                                                    className="w-full" size="lg" type="submit" variant="default"
                                                                     disabled={isLoading || totpCode.length < 6}
-                                                                    sx={{
-                                                                        py: 2.5, borderRadius: 3, fontWeight: 900, fontSize: '1.1rem',
+                                                                    style={{
+                                                                        padding: '1.25rem', borderRadius: '0.75rem', fontWeight: 900, fontSize: '1.1rem',
                                                                         background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
                                                                         boxShadow: `0 8px 16px ${alpha('#10B981', 0.25)}`,
+                                                                        color: 'white'
                                                                     }}
                                                                 >
                                                                     Verify Code
@@ -801,10 +805,10 @@ const Login = () => {
 
                                                         <Box sx={{ textAlign: 'center' }}>
                                                             <Button
-                                                                variant="text" onClick={() => setStep(1)}
-                                                                startIcon={<KeyboardBackspace />}
-                                                                sx={{ color: 'text.secondary', fontWeight: 700, '&:hover': { color: isLightMode ? 'text.primary' : 'white' } }}
+                                                                variant="ghost" onClick={() => setStep(1)}
+                                                                style={{ color: '#999', fontWeight: 700 }}
                                                             >
+                                                                <KeyboardBackspace style={{ marginRight: '0.5rem' }} />
                                                                 Back to Login
                                                             </Button>
                                                         </Box>

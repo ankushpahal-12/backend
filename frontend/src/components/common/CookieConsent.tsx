@@ -48,7 +48,7 @@ const CookieConsent: React.FC = () => {
                 <Button variant="outlined" color="primary" onClick={handleReject}>
                     Reject All
                 </Button>
-                <Button variant="contained" color="primary" onClick={handleAccept}>
+                <Button variant="default" color="primary" onClick={handleAccept}>
                     Accept All
                 </Button>
             </Box>

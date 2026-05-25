@@ -10,5 +10,6 @@ export { HowItWorks } from './HowItWorks';
 export { Testimonials } from './Testimonials';
 export { Pricing } from './Pricing';
 export { CallToAction } from './CallToAction';
+export { TypewriterConnector } from './TypewriterConnector';
 
 export type { default } from './Navbar';
