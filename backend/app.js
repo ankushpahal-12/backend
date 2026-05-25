@@ -50,22 +50,7 @@ import { auditLog } from './utils/auditLogger.js';
 const app = express();
 
 // ════════════════════════════════════════════════════════════════════════════
-// HEALTH CHECK ENDPOINTS (Bypasses security middlewares, proxies, & rate limits)
-// ════════════════════════════════════════════════════════════════════════════
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-app.get('/api/health', (req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-app.get('/api/v1/health', (req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// ════════════════════════════════════════════════════════════════════════════
-// PROXY CONFIGURATION
+// PROXY CONFIGURATION (MUST BE BEFORE ANY ROUTES)
 // ════════════════════════════════════════════════════════════════════════════
 // Trust first proxy ONLY in production (behind a real load balancer/reverse proxy)
 // In dev, this would allow IP spoofing via X-Forwarded-For header
@@ -348,6 +333,21 @@ app.get('/api/csrf-token', csrfLimiter, (req, res) => {
         status: 'deprecated',
         message: 'Use /api/v1/csrf-token instead'
     });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// HEALTH CHECK ENDPOINTS (After CORS/middleware setup, allows frontend checks)
+// ════════════════════════════════════════════════════════════════════════════
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/v1/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
