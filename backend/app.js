@@ -150,13 +150,17 @@ const allowedOrigins=[
 ]
 const corsOptions = {
     origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps, curls, direct browser visits, or Render health check pings)
+        if (!origin) {
+            return callback(null, true);
+        }
+
         // Explicitly block null origins (sent by sandboxed iframes or file:// redirects)
-        if (!origin || origin === 'null') {
-            // Allow tools like Postman and VS Code REST Client to work in development
+        if (origin === 'null') {
             if (config.env === 'development') {
                 return callback(null, true);
             }
-            return callback(new Error('CORS blocked: null or missing origin. Use a browser or provide an Origin header.'));
+            return callback(new Error('CORS blocked: null origin.'));
         }
         if(allowedOrigins.includes(origin)){
             return callback(null, true);
