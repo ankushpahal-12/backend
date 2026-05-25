@@ -27,6 +27,13 @@ const isValidUrl = (value) => {
 
 const containsLocalhost = (value) => /localhost|127\.0\.0\.1|::1/i.test(value);
 
+const getSanitizedCookieDomain = (val) => {
+    if (!val || typeof val !== 'string') return undefined;
+    const clean = val.trim();
+    const isValid = /^[a-zA-Z0-9.-]+$/.test(clean) && clean.length > 0 && clean !== 'localhost';
+    return isValid ? clean : undefined;
+};
+
 const config = {
     env,
     port: process.env.PORT || 5000,
@@ -50,7 +57,7 @@ const config = {
     allowedOrigins: parseCsv(process.env.ALLOWED_ORIGINS, ['http://localhost:5173', 'http://localhost:3000']),
     allowedHosts: parseCsv(process.env.ALLOWED_HOSTS, ['localhost:5000', 'localhost:5173', 'localhost']),
     trustedProxies: parseCsv(process.env.TRUSTED_PROXIES, ['127.0.0.1', 'localhost', '::1', '10.*', '172.*', '100.*']),
-    cookieDomain: process.env.COOKIE_DOMAIN,
+    cookieDomain: getSanitizedCookieDomain(process.env.COOKIE_DOMAIN),
     cookieSameSite: process.env.COOKIE_SAMESITE || (env === 'production' ? 'none' : 'lax'),
     signature: {
         mode: process.env.SIGNATURE_MODE || (env === 'production' ? 'monitor' : 'off'),
