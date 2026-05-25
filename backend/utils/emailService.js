@@ -26,35 +26,59 @@ dotenv.config();
 let transporter = null;
 let emailConfigured = false;
 
-if (config.email.user && config.email.pass && config.email.host) {
+// Prefer custom SMTP (Mailtrap, SendGrid, etc.) for cloud deployments
+if (config.email.host && config.email.port) {
     transporter = nodemailer.createTransport({
         host: config.email.host,
         port: config.email.port,
-        secure: Number(config.email.port) === 465, // true for 465, false for 587
+        secure: Number(config.email.port) === 465 || config.email.secure, 
         family: 4, // Force IPv4 — Render free tier does not support IPv6 outbound
-        service: 'gmail',
-        auth: {
+        auth: config.email.user && config.email.pass ? {
             user: config.email.user,
             pass: config.email.pass,
-        },
-        connectionTimeout: 5000, // 5 seconds
+        } : undefined,
+        connectionTimeout: 5000,
         greetingTimeout: 5000,
         socketTimeout: 5000,
     });
 
+    console.log(`✉️  Using SMTP: ${config.email.host}:${config.email.port} (secure: ${Number(config.email.port) === 465 || config.email.secure})`);
+
     // Verify connection configuration
     transporter.verify((error, success) => {
         if (error) {
-            console.error('SMTP Connection Error:', error);
+            console.error('SMTP Connection Error:', error.message);
             console.warn('Email sending is disabled - SMTP configuration failed');
+            console.warn('\n📧 PRODUCTION EMAIL SETUP:');
+            console.warn('For Render deployments, use one of these services:');
+            console.warn('  • Mailtrap: https://mailtrap.io (Free tier available)');
+            console.warn('  • SendGrid: https://sendgrid.com (Free 100 emails/day)');
+            console.warn('  • Mailgun: https://mailgun.com (Free tier available)');
+            console.warn('\nEnvironment variables needed:');
+            console.warn('  EMAIL_HOST=smtp.mailtrap.io');
+            console.warn('  EMAIL_PORT=465 (or 587)');
+            console.warn('  EMAIL_USER=your_username');
+            console.warn('  EMAIL_PASS=your_password');
+            console.warn('  EMAIL_FROM=noreply@yourapp.com\n');
             emailConfigured = false;
         } else {
-            console.log('SMTP Server is ready to take our messages');
+            console.log('✅ SMTP Server is ready to send messages');
             emailConfigured = true;
         }
     });
 } else {
     console.warn('Email credentials not configured - email sending is disabled');
+    console.warn('\n📧 PRODUCTION EMAIL SETUP:');
+    console.warn('For Render deployments, use one of these services:');
+    console.warn('  • Mailtrap: https://mailtrap.io (Free tier available)');
+    console.warn('  • SendGrid: https://sendgrid.com (Free 100 emails/day)');
+    console.warn('  • Mailgun: https://mailgun.com (Free tier available)');
+    console.warn('\nEnvironment variables needed:');
+    console.warn('  EMAIL_HOST=smtp.mailtrap.io');
+    console.warn('  EMAIL_PORT=465 (or 587)');
+    console.warn('  EMAIL_USER=your_username');
+    console.warn('  EMAIL_PASS=your_password');
+    console.warn('  EMAIL_FROM=noreply@yourapp.com\n');
     emailConfigured = false;
 }
 

@@ -74,6 +74,13 @@ const parseForwardedFor = (header) => {
 };
 
 /**
+ * Check if an IP is a private/internal IP
+ */
+const isPrivateIP = (ip) => {
+    return /^(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.|127\.|::1|fc00:|fd00:)/.test(ip);
+};
+
+/**
  * Detect suspicious X-Forwarded-For patterns
  */
 const detectSpoofingPatterns = (forwardedIPs, remoteIP, trustedProxies) => {
@@ -96,10 +103,18 @@ const detectSpoofingPatterns = (forwardedIPs, remoteIP, trustedProxies) => {
         suspicions.push('duplicate_ips_in_chain');
     }
     
-    // Check 4: Private IP followed by public IP (unusual unless intentional)
-    const hasPrivateIP = forwardedIPs.some(ip => /^(10\.|172\.16\.|192\.168\.)/.test(ip));
-    const hasPublicIP = forwardedIPs.some(ip => !/^(10\.|172\.16\.|192\.168\.|127\.|::1)/.test(ip));
-    if (hasPrivateIP && hasPublicIP) {
+    // Check 4: Private IP followed by public IP is NORMAL in cloud proxy chains
+    // Only flag if remoteIP is NOT a trusted proxy (meaning the header might be spoofed)
+    // In legitimate proxy chains (Render, AWS, etc.):
+    //   - Client connects to CDN/LB (public IP in X-Forwarded-For)
+    //   - CDN/LB connects to app (private internal network)
+    //   - X-Forwarded-For contains: client_ip, cdn_ip, ... (mixed public/private)
+    const hasPrivateIP = forwardedIPs.some(ip => isPrivateIP(ip));
+    const hasPublicIP = forwardedIPs.some(ip => !isPrivateIP(ip));
+    
+    // Only flag mixed IPs if remoteIP is UNTRUSTED (spoofing attempt)
+    // If remoteIP is trusted, mixed IPs are expected in a legitimate proxy chain
+    if (hasPrivateIP && hasPublicIP && !isTrustedProxy(remoteIP, trustedProxies)) {
         suspicions.push('mixed_private_public_ips');
     }
     

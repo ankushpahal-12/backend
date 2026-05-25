@@ -7,10 +7,11 @@ import { emailTemplates } from './emailTemplates.js';
 // meaning this module's body runs before server.js can call setDefaultResultOrder.
 setDefaultResultOrder('ipv4first');
 
-// Initialize transporter - supports both Gmail (service mode) and custom SMTP (host/port mode)
+// Initialize transporter - supports custom SMTP (Mailtrap, SendGrid, Mailgun, etc.)
 let transporter;
 
-// Check if using custom SMTP (Mailtrap, SendGrid, etc.)
+// For cloud deployments (Render, Heroku, etc.), use SMTP instead of service mode
+// Render blocks Gmail/Outlook SMTP connections. Use Mailtrap, SendGrid, or Mailgun instead.
 if (process.env.EMAIL_HOST && process.env.EMAIL_PORT) {
   const emailPass = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS;
   transporter = nodemailer.createTransport({
@@ -21,28 +22,33 @@ if (process.env.EMAIL_HOST && process.env.EMAIL_PORT) {
     auth: (process.env.EMAIL_USER || process.env.EMAIL_USERNAME) && emailPass ? {
       user: process.env.EMAIL_USER || process.env.EMAIL_USERNAME,
       pass: emailPass
-    } : undefined
+    } : undefined,
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 5000,
   });
   console.log(`✉️  Using SMTP: ${process.env.EMAIL_HOST}:${process.env.EMAIL_PORT} (secure: ${parseInt(process.env.EMAIL_PORT) === 465})`);
 } else if ((process.env.EMAIL_USER || process.env.EMAIL_USERNAME) && (process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS)) {
-  // Use Gmail or other email service
+  // Fallback for development: use Gmail with app password
+  console.warn('⚠️  EMAIL_HOST not configured. Attempting Gmail authentication.');
+  console.warn('   For production (Render), use Mailtrap, SendGrid, or Mailgun instead.');
   transporter = nodemailer.createTransport({
     service: process.env.EMAIL_SERVICE || 'gmail',
-    family: 4, // Force IPv4 — Render free tier does not support IPv6 outbound
+    family: 4, // Force IPv4
     auth: {
       user: process.env.EMAIL_USER || process.env.EMAIL_USERNAME,
       pass: process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS
     }
   });
-  console.log(`✉️  Using Gmail service with user: ${process.env.EMAIL_USER || process.env.EMAIL_USERNAME}`);
+  console.log(`📧 Using Gmail service with user: ${process.env.EMAIL_USER || process.env.EMAIL_USERNAME}`);
 } else {
   // Development mode: use ethereal test account
-  console.warn('⚠️ No email credentials provided. Using test email account for development.');
+  console.warn('⚠️ No email credentials provided. Using Ethereal test account for development.');
   transporter = nodemailer.createTransport({
     host: 'smtp.ethereal.email',
     port: 587,
     secure: false,
-    family: 4, // Force IPv4 — Render free tier does not support IPv6 outbound
+    family: 4,
     auth: {
       user: process.env.ETHEREAL_USER || 'test@ethereal.email',
       pass: process.env.ETHEREAL_PASS || 'test-password'
@@ -57,14 +63,16 @@ transporter.verify((error, success) => {
     
     // Provide helpful guidance based on the error
     if (error.message.includes('Authentication failed') || error.message.includes('Invalid login')) {
-      console.error('\n🔧 GMAIL AUTHENTICATION FIX:');
-      console.error('If using ankushpayal58@gmail.com, you need an APP PASSWORD, not your regular Gmail password.');
-      console.error('Follow these steps:');
-      console.error('1. Go to: https://myaccount.google.com/apppasswords');
-      console.error('2. Select "Mail" and "Windows Computer"');
-      console.error('3. Copy the 16-character password');
-      console.error('4. Update .env: EMAIL_PASS=<16-char-password>');
-      console.error('5. Restart the backend\n');
+      console.error('\n🔧 EMAIL AUTHENTICATION ERROR:');
+      console.error('Gmail: Use 16-character app password (not your regular password)');
+      console.error('Steps: https://myaccount.google.com/apppasswords → Select "Mail" and "Windows Computer"');
+      console.error('\nFor Render deployments, use Mailtrap, SendGrid, or Mailgun instead.\n');
+    } else if (error.code === 'ENETUNREACH' || error.message.includes('ENETUNREACH')) {
+      console.error('\n🔧 NETWORK UNREACHABLE (common on Render):');
+      console.error('Gmail/Outlook SMTP is blocked on Render. Use instead:');
+      console.error('  • Mailtrap: https://mailtrap.io (Free tier)');
+      console.error('  • SendGrid: https://sendgrid.com (Free 100 emails/day)');
+      console.error('  • Mailgun: https://mailgun.com (Free tier)\n');
     }
   } else {
     console.log('✅ Email service ready - SMTP verified and working');
