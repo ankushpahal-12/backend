@@ -129,7 +129,10 @@ app.use(helmet({
         preload: true,
     },
 }));
-
+const allowedOrigins=[
+    'http://localhost:5173',
+    'https://backend-sandy-one-77.vercel.app',
+]
 const corsOptions = {
     origin: (origin, callback) => {
         // Explicitly block null origins (sent by sandboxed iframes or file:// redirects)
@@ -140,6 +143,10 @@ const corsOptions = {
             }
             return callback(new Error('CORS blocked: null or missing origin. Use a browser or provide an Origin header.'));
         }
+        if(allowedOrigins.includes(origin)){
+            return callback(null, true);
+        }
+        
         if (config.allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
