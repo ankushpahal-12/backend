@@ -163,9 +163,11 @@ export const ipBlacklistMiddleware = (req, res, next) => {
 
     // Check if IP is from India
     if (!isIndiaIP(clientIP)) {
-        console.warn(`[SECURITY] Blocked request from non-India IP: ${clientIP}`);
-        trackSuspiciousActivity(clientIP, 'Non-India IP detected');
-        return req.socket.destroy();
+        console.warn(`[SECURITY] Request from non-India IP (or unrecognized Indian range): ${clientIP}`);
+        // VULN FIX: The hardcoded list of India IP ranges is highly incomplete and blocks legitimate Indian users (e.g., Jio/Airtel subnets).
+        // In production, we log this warning but allow the request to proceed rather than calling req.socket.destroy(),
+        // which causes abrupt connection drops and CORS/network errors in browsers.
+        // For real geo-blocking, a GeoIP database or CDN/WAF (e.g., Cloudflare) should be used instead.
     }
 
     next();

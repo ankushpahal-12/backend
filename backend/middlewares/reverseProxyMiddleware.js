@@ -313,12 +313,19 @@ export const validateRequestFormat = (req, res, next) => {
  * Catches errors before they leak implementation details
  */
 export const hideStackTraces = (err, req, res, next) => {
+    // Log error details for server diagnostics
+    const statusCode = err.statusCode || (Number.isInteger(err.status) ? err.status : 500);
+    if (statusCode >= 500) {
+        console.error('[SERVER ERROR]', err.stack || err);
+    } else {
+        console.warn(`[SERVER WARNING - ${statusCode}]`, err.message || err);
+    }
+
     if (config.env === 'development') {
         return next(err);
     }
 
     // In production, never expose stack traces
-    const statusCode = err.statusCode || (Number.isInteger(err.status) ? err.status : 500);
     const message = err.isOperational || statusCode === 404 ? err.message : 'Internal server error';
 
     res.status(statusCode).json({
