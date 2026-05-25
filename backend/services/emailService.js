@@ -1,5 +1,11 @@
 import nodemailer from 'nodemailer';
+import { setDefaultResultOrder } from 'dns';
 import { emailTemplates } from './emailTemplates.js';
+
+// Force IPv4 DNS resolution — Render free tier blocks IPv6 outbound connections.
+// Must be called here (not just in server.js) because ES module imports are hoisted,
+// meaning this module's body runs before server.js can call setDefaultResultOrder.
+setDefaultResultOrder('ipv4first');
 
 // Initialize transporter - supports both Gmail (service mode) and custom SMTP (host/port mode)
 let transporter;
@@ -11,6 +17,7 @@ if (process.env.EMAIL_HOST && process.env.EMAIL_PORT) {
     host: process.env.EMAIL_HOST,
     port: parseInt(process.env.EMAIL_PORT),
     secure: process.env.EMAIL_SECURE === 'true' || parseInt(process.env.EMAIL_PORT) === 465,
+    family: 4, // Force IPv4 — Render free tier does not support IPv6 outbound
     auth: (process.env.EMAIL_USER || process.env.EMAIL_USERNAME) && emailPass ? {
       user: process.env.EMAIL_USER || process.env.EMAIL_USERNAME,
       pass: emailPass
@@ -21,6 +28,7 @@ if (process.env.EMAIL_HOST && process.env.EMAIL_PORT) {
   // Use Gmail or other email service
   transporter = nodemailer.createTransport({
     service: process.env.EMAIL_SERVICE || 'gmail',
+    family: 4, // Force IPv4 — Render free tier does not support IPv6 outbound
     auth: {
       user: process.env.EMAIL_USER || process.env.EMAIL_USERNAME,
       pass: process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS
@@ -34,6 +42,7 @@ if (process.env.EMAIL_HOST && process.env.EMAIL_PORT) {
     host: 'smtp.ethereal.email',
     port: 587,
     secure: false,
+    family: 4, // Force IPv4 — Render free tier does not support IPv6 outbound
     auth: {
       user: process.env.ETHEREAL_USER || 'test@ethereal.email',
       pass: process.env.ETHEREAL_PASS || 'test-password'

@@ -50,6 +50,21 @@ import { auditLog } from './utils/auditLogger.js';
 const app = express();
 
 // ════════════════════════════════════════════════════════════════════════════
+// HEALTH CHECK ENDPOINTS (Bypasses security middlewares, proxies, & rate limits)
+// ════════════════════════════════════════════════════════════════════════════
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/v1/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
 // PROXY CONFIGURATION
 // ════════════════════════════════════════════════════════════════════════════
 // Trust first proxy ONLY in production (behind a real load balancer/reverse proxy)
@@ -165,21 +180,6 @@ app.use(cors(corsOptions));
 app.options('{/*path}', cors(corsOptions));
 app.use(cookieParser());
 app.use(csrfTokenMiddleware);
-
-// Health check endpoints with CORS headers enabled
-// These must be AFTER CORS middleware to get proper CORS headers
-// They also bypass rate limiting for internal health checks
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-app.get('/api/health', (req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-app.get('/api/v1/health', (req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-});
 
 // Logging - use 'dev' in development, 'combined' in production
 if (config.env === 'development') {
