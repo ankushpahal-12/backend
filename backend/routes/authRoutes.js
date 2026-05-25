@@ -4,7 +4,7 @@ import * as tokenController from '../controllers/tokenController.js';
 import * as twoFactorController from '../controllers/twoFactorController.js';
 import { initSession, validateSessionId } from '../controllers/sessionController.js';
 import { protect } from '../middlewares/authMiddleware.js';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import detectBot from '../middlewares/botDetectionMiddleware.js';
 import config from '../config/config.js';
 import {
@@ -27,6 +27,8 @@ const buildLimiter = (windowMs, max, message) => rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    trustProxy: true,
+    keyGenerator: ipKeyGenerator,
     skip: (req) => req.method === 'OPTIONS', // Don't count CORS preflight requests
 });
 
@@ -40,6 +42,8 @@ const authLimit = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    trustProxy: true,
+    keyGenerator: ipKeyGenerator,
     skip: (req) => req.method === 'OPTIONS', // Don't count CORS preflight requests
 });
 

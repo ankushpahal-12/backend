@@ -10,7 +10,7 @@ import { getTestResults, getUserTestHistory, getTestById, getAvailableTests } fr
 // or migrate them to candidate logic. For now, we'll keep results/history there but use the new attempt routes.
 
 import { protect as authMiddleware, protectAttempt } from '../middlewares/authMiddleware.js';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 
 const router = express.Router();
 
@@ -18,6 +18,8 @@ const strictLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20, 
   message: { success: false, message: 'Too many requests, please try again later.' },
+  trustProxy: true,
+  keyGenerator: ipKeyGenerator,
   skip: (req) => req.method === 'OPTIONS', // Don't count CORS preflight requests
 });
 
@@ -25,6 +27,8 @@ const mediumLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100, 
   message: { success: false, message: 'Too many requests, please try again later.' },
+  trustProxy: true,
+  keyGenerator: ipKeyGenerator,
   skip: (req) => req.method === 'OPTIONS', // Don't count CORS preflight requests
 });
 
@@ -32,6 +36,8 @@ const publicLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30, 
   message: { success: false, message: 'Too many requests, please try again later.' },
+  trustProxy: true,
+  keyGenerator: ipKeyGenerator,
   skip: (req) => req.method === 'OPTIONS', // Don't count CORS preflight requests
 });
 

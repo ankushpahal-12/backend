@@ -1,6 +1,6 @@
 
 import express from 'express';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { protect, restrictTo } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -15,6 +15,8 @@ const secEventLimit = rateLimit({
     max: 30,               // 30 events per IP per minute is generous for legitimate use
     standardHeaders: true,
     legacyHeaders: false,
+    trustProxy: true,
+    keyGenerator: ipKeyGenerator,
     message: { status: 'error', message: 'Too many security events from this IP' },
     skip: (req) => req.method === 'OPTIONS', // Don't count CORS preflight requests
 });
@@ -115,6 +117,8 @@ const auditLogLimit = rateLimit({
     max: 100,              // 100 audit log entries per IP per minute
     standardHeaders: true,
     legacyHeaders: false,
+    trustProxy: true,
+    keyGenerator: ipKeyGenerator,
     message: { status: 'error', message: 'Too many audit log entries' },
     skip: (req) => req.method === 'OPTIONS', // Don't count CORS preflight requests
 });

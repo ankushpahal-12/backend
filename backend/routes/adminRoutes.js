@@ -1,5 +1,5 @@
 import express from 'express';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import * as adminController from '../controllers/adminController.js';
 import { protect, restrictTo } from '../middlewares/authMiddleware.js';
 
@@ -15,6 +15,8 @@ const publicOtpLimit = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    trustProxy: true,
+    keyGenerator: ipKeyGenerator,
 });
 
 // ─── Public Routes (for email verification) ────────────────────────────────────

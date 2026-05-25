@@ -184,6 +184,8 @@ const limiter = rateLimit({
     message: 'Too many requests from this IP, please try again in 15 minutes!',
     standardHeaders: true,
     legacyHeaders: false,
+    trustProxy: true,
+    keyGenerator: ipKeyGenerator,
     skip: (req) => req.method === 'OPTIONS', // Don't count CORS preflight requests
 });
 app.use('/api', limiter);
@@ -195,6 +197,8 @@ const mfaLimiter = rateLimit({
     message: 'Too many MFA attempts. Please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
+    trustProxy: true,
+    keyGenerator: ipKeyGenerator,
 });
 
 // Login Rate Limiting (stricter)
@@ -204,6 +208,8 @@ const loginLimiter = rateLimit({
     message: 'Too many login attempts. Please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
+    trustProxy: true,
+    keyGenerator: ipKeyGenerator,
 });
 
 // CSRF Token Endpoint Rate Limiting (lenient - users may refresh tokens frequently, security wrappers may retry)
@@ -214,7 +220,8 @@ const csrfLimiter = rateLimit({
     message: 'Too many CSRF token requests. Please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => ipKeyGenerator(req.ip),
+    trustProxy: true,
+    keyGenerator: ipKeyGenerator,
     skip: (req) => {
         //  Check if token is already in meta tag from initial page load
         // This can help reduce unnecessary requests if frontend is caching properly
