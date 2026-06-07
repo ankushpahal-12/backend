@@ -28,7 +28,6 @@ const strictLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20, // 20 requests per 15 mins for mutations
   message: { success: false, message: 'Too many requests, please try again later.' },
-  trustProxy: true,
   keyGenerator: ipKeyGenerator,
 });
 
@@ -36,7 +35,6 @@ const mediumLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100, // 100 requests per 15 mins for standard lookups
   message: { success: false, message: 'Too many requests, please try again later.' },
-  trustProxy: true,
   keyGenerator: ipKeyGenerator,
 });
 
@@ -44,7 +42,6 @@ const publicLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30, // 30 requests per 15 mins for public sharing
   message: { success: false, message: 'Too many requests, please try again later.' },
-  trustProxy: true,
   keyGenerator: ipKeyGenerator,
 });
 

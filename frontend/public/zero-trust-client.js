@@ -1,11 +1,3 @@
-/**
- * RESPONSIBILITIES:
- * 1. Generate and send device fingerprint with requests
- * 2. Track and report user behavior patterns
- * 3. Handle MFA challenges
- * 4. Monitor for suspicious activity
- * 5. Maintain device trust status
- */
 
 (function(global) {
     'use strict';
@@ -15,10 +7,7 @@
         global.location.hostname === '127.0.0.1'
     );
     const DeviceFingerprinter = {
-        /**
-         * Generate comprehensive device fingerprint
-         * Combines multiple factors for accuracy
-         */
+   
         generate: async function() {
             const components = {
                 // Browser capabilities
@@ -90,7 +79,6 @@
             }
         },
 
-//WebGL fingerprinting - graphics card identification
         webglHash: async function() {
             try {
                 const canvas = document.createElement('canvas');

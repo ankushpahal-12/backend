@@ -209,7 +209,7 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
 
             {/* Glass shine effect with animation */}
             <motion.div
-              className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent pointer-events-none"
+              className="absolute inset-0 bg-linear-to-r from-white/30 via-transparent to-transparent pointer-events-none"
               animate={{
                 opacity: [0.5, 0.8, 0.5],
               }}
@@ -218,7 +218,7 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
 
             {/* Glow effect on hover */}
             <motion.div
-              className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-pink-500 rounded-2xl opacity-0 -z-10 blur-xl group-hover:opacity-20 transition-opacity"
+              className="absolute -inset-0.5 bg-linear-to-r from-indigo-500 to-pink-500 rounded-2xl opacity-0 -z-10 blur-xl group-hover:opacity-20 transition-opacity"
               animate={{
                 scale: [1, 1.05, 1],
               }}
@@ -236,7 +236,7 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
                 whileTap={{ scale: 0.95 }}
               >
                 <motion.div
-                  className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-pink-500 text-white flex items-center justify-center rounded-lg font-bold overflow-hidden relative"
+                  className="w-8 h-8 bg-linear-to-r from-indigo-500 to-pink-500 text-white flex items-center justify-center rounded-lg font-bold overflow-hidden relative"
                   whileHover={{
                     boxShadow: "0 0 20px rgba(99,102,241,0.8)",
                   }}
@@ -245,12 +245,12 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
                   <motion.div
                     animate={{ rotateZ: [0, 360] }}
                     transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-pink-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute inset-0 bg-linear-to-r from-indigo-600 via-pink-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity"
                   />
                   <span className="relative z-10">A</span>
                 </motion.div>
                 <motion.span
-                  className="font-bold text-base bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent"
+                  className="font-bold text-base bg-linear-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent"
                   animate={{
                     textShadow: [
                       "0 0 0px rgba(99,102,241,0)",
@@ -307,7 +307,7 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
                         {isActive && (
                           <motion.div
                             layoutId="underline"
-                            className="absolute -bottom-1 left-0 right-0 h-[2px] bg-indigo-500"
+                            className="absolute -bottom-1 left-0 right-0 h-0.5 bg-indigo-500"
                           />
                         )}
                       </motion.button>
@@ -357,35 +357,45 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
               <div className="hidden md:flex items-center gap-4">
                 <ThemeToggle />
 
-                <motion.button
-                  type="button"
-                  onClick={() => navigateWithSession('login')}
-                  className="px-4 py-2 text-sm font-medium rounded-lg hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Sign In
-                </motion.button>
+                <div className="relative">
+                  <motion.button
+                    type="button"
+                    disabled
+                    onClick={() => navigateWithSession('login')}
+                    className="px-4 py-2 text-sm font-medium rounded-lg text-slate-400 dark:text-slate-500 bg-slate-200/50 dark:bg-slate-800/30 cursor-not-allowed opacity-60 transition-colors group"
+                    whileHover={{ scale: 1 }}
+                    whileTap={{ scale: 1 }}
+                  >
+                    Sign In
+                  </motion.button>
+                  <div className="fixed px-3 py-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded-lg whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50 bottom-24 left-1/2 transform -translate-x-1/2">
+                    Disabled: Button disabled due to the website is under processing to complete
+                  </div>
+                </div>
 
-                <motion.button
-                  type="button"
-                  ref={btnRef}
-                  onMouseMove={handleMagnetic}
-                  onMouseLeave={resetMagnetic}
-                  onClick={() => navigateWithSession('signup')}
-                  className="relative px-6 py-2 rounded-lg text-white font-semibold overflow-hidden transition-all"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <span className="relative z-10">Get Started</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-pink-500" />
+                <div className="relative">
+                  <motion.button
+                    type="button"
+                    disabled
+                    ref={btnRef}
+                    onMouseMove={handleMagnetic}
+                    onMouseLeave={resetMagnetic}
+                    onClick={() => navigateWithSession('signup')}
+                    className="relative px-6 py-2 rounded-lg text-white font-semibold overflow-hidden transition-all opacity-60 cursor-not-allowed group"
+                  >
+                    <span className="relative z-10">Get Started</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-slate-400 to-slate-500" />
 
-                  <motion.div
-                    className="absolute inset-0 bg-white/20 blur-xl"
-                    animate={{ opacity: [0.2, 0.5, 0.2] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                </motion.button>
+                    <motion.div
+                      className="absolute inset-0 bg-white/20 blur-xl"
+                      animate={{ opacity: [0.2, 0.5, 0.2] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                  </motion.button>
+                  <div className="fixed px-3 py-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded-lg whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50 bottom-24 left-1/2 transform -translate-x-1/2">
+                    Disabled: Button disabled due to the website is under processing to complete
+                  </div>
+                </div>
               </div>
               </div>
 
@@ -456,7 +466,7 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
                           whileTap={{ scale: 0.96 }}
                           className={`flex items-center justify-between w-full px-4 py-3 rounded-xl backdrop-blur border transition-all ${
                             isActive
-                              ? "bg-gradient-to-r from-indigo-500/20 to-pink-500/20 border-indigo-400/40 text-indigo-600 shadow-md"
+                              ? "bg-linear-to-r from-indigo-500/20 to-pink-500/20 border-indigo-400/40 text-indigo-600 shadow-md"
                               : "bg-white/40 dark:bg-slate-800/40 border-white/20 dark:border-slate-700/60 hover:bg-white/60 dark:hover:bg-slate-800/70"
                           }`}
                         >
@@ -524,35 +534,47 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
                 {/*AUTH BUTTONS */}
                 <div className="pt-6 border-t border-white/20 space-y-3">
                   {/* SIGN IN */}
-                  <button
-                    type="button"
-                    onClick={() => navigateWithSession('login')}
-                    className="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-slate-800/50 
-                 text-sm font-medium hover:bg-white/70 transition"
-                  >
-                    Sign In
-                  </button>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      disabled
+                      onClick={() => navigateWithSession('login')}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-200/50 dark:bg-slate-800/30 text-slate-400 dark:text-slate-500
+                   text-sm font-medium cursor-not-allowed opacity-60 transition group"
+                    >
+                      Sign In
+                    </button>
+                    <div className="fixed px-3 py-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded-lg whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50 -bottom-20 left-1/2 transform -translate-x-1/2">
+                      Disabled: Button disabled due to the website is under processing to complete
+                    </div>
+                  </div>
 
                   {/* SIGN UP / GET STARTED */}
-                  <motion.button
-                    type="button"
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => navigateWithSession('signup')}
-                    className="relative w-full px-4 py-3 rounded-xl text-sm font-semibold text-white overflow-hidden"
-                  >
-                    <span className="relative z-10">Get Started</span>
+                  <div className="group relative">
+                    <motion.button
+                      type="button"
+                      disabled
+                      whileHover={{ scale: 1 }}
+                      whileTap={{ scale: 1 }}
+                      onClick={() => navigateWithSession('signup')}
+                      className="relative w-full px-4 py-3 rounded-xl text-sm font-semibold text-white overflow-hidden opacity-60 cursor-not-allowed"
+                    >
+                      <span className="relative z-10">Get Started</span>
 
-                    {/* gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-pink-500" />
+                      {/* gradient */}
+                      <div className="absolute inset-0 bg-linear-to-r from-slate-400 to-slate-500" />
 
-                    {/* glow pulse */}
-                    <motion.div
-                      className="absolute inset-0 bg-white/20 blur-xl"
-                      animate={{ opacity: [0.2, 0.5, 0.2] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    />
-                  </motion.button>
+                      {/* glow pulse */}
+                      <motion.div
+                        className="absolute inset-0 bg-white/20 blur-xl"
+                        animate={{ opacity: [0.2, 0.5, 0.2] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
+                    </motion.button>
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded-lg whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                      Disabled: Button disabled due to the website is under processing to complete
+                    </div>
+                  </div>
                 </div>
               </div>
             </motion.div>

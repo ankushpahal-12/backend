@@ -15,7 +15,6 @@ const publicOtpLimit = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
-    trustProxy: true,
     keyGenerator: ipKeyGenerator,
 });
 

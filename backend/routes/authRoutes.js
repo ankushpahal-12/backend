@@ -27,7 +27,6 @@ const buildLimiter = (windowMs, max, message) => rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
-    trustProxy: true,
     keyGenerator: ipKeyGenerator,
     skip: (req) => req.method === 'OPTIONS', // Don't count CORS preflight requests
 });
@@ -42,7 +41,6 @@ const authLimit = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
-    trustProxy: true,
     keyGenerator: ipKeyGenerator,
     skip: (req) => req.method === 'OPTIONS', // Don't count CORS preflight requests
 });

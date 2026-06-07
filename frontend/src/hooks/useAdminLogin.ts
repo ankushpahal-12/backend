@@ -45,6 +45,8 @@ export const useAdminLogin = () => {
                 (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Login failed. Security protocol engaged.',
                 'error'
             );
+            throw err; // Rethrow to allow outer handler to catch network/server errors states to execute appropriate UI feedback
+            
         }
     };
 
@@ -57,8 +59,8 @@ export const useAdminLogin = () => {
             const response = await authService.adminVerify2FA({ email, otp, requestId: newRid } as any);
             await stopLoading();
             login(response.data.user, response.token);
-            showNotification('Admin authentication verified. Welcome to the Command Center.', 'success');
-            toast.success('Admin authentication verified — welcome');
+            showNotification('Otp Verifies Successfully. Welcome to the Admin Dashboard.', 'success');
+            toast.success('Admin access granted. Welcome back..!');
             navigate('/admin/dashboard');
         } catch (err: unknown) {
             await stopLoading();
@@ -67,6 +69,7 @@ export const useAdminLogin = () => {
                 'error'
             );
             toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Invalid 2FA code.');
+            throw err; // Rethrow to allow outer handler to catch network/server errors states to execute appropriate UI feedback
         }
     };
 

@@ -9,9 +9,21 @@ import User from './models/User.js';
 let io;
 
 export const initSocket = (server) => {
+    // Build array of allowed origins for Socket.io CORS
+    const socketAllowedOrigins = [
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'https://backend-sandy-one-77.vercel.app',
+    ];
+
+    // Add additional allowed origins from config if available
+    if (config.allowedOrigins && Array.isArray(config.allowedOrigins)) {
+        socketAllowedOrigins.push(...config.allowedOrigins.filter(origin => !socketAllowedOrigins.includes(origin)));
+    }
+
     io = new Server(server, {
         cors: {
-            origin: config.frontendUrl,
+            origin: socketAllowedOrigins,
             methods: ['GET', 'POST'],
             credentials: true
         },
@@ -297,6 +309,64 @@ export const initSocket = (server) => {
             });
         });
 
+        // ════════════════════════════════════════════════════════════════════
+        // REAL-TIME LOADER — Website processing status updates
+        // ════════════════════════════════════════════════════════════════════
+
+        // Admin: Send loader update to all connected clients
+        socket.on('loader:update', ({ loaderKey, progress, message, subMessage, status }) => {
+            if (!socket.user || socket.user.role !== 'admin') return;
+            
+            // Broadcast to all clients
+            io.emit('loader:progress', {
+                loaderKey,
+                progress: Math.min(progress, 100),
+                message,
+                subMessage,
+                status,
+                timestamp: Date.now(),
+            });
+        });
+
+        // Admin: Send website-wide processing status
+        socket.on('website:status', ({ isProcessing, message, progress, status }) => {
+            if (!socket.user || socket.user.role !== 'admin') return;
+            
+            // Broadcast to all clients in landing page
+            io.emit('website:status:update', {
+                isProcessing,
+                message: message || (isProcessing ? 'Website is processing...' : 'Website is ready'),
+                progress: progress || 0,
+                status: status || (isProcessing ? 'processing' : 'success'),
+                timestamp: Date.now(),
+            });
+
+            console.log(`[Website Status] Admin ${socket.user._id} updated status: ${isProcessing ? 'Processing' : 'Ready'}`);
+        });
+
+        // Admin: Send targeted loader update to specific user
+        socket.on('loader:update-user', ({ userId, loaderKey, progress, message, subMessage, status }) => {
+            if (!socket.user || socket.user.role !== 'admin') return;
+            
+            io.to(userId.toString()).emit('loader:progress', {
+                loaderKey,
+                progress: Math.min(progress, 100),
+                message,
+                subMessage,
+                status,
+                timestamp: Date.now(),
+            });
+        });
+
+        // Client: Request current processing status
+        socket.on('loader:request-status', () => {
+            // This would be used if you want to query current status
+            // For now, clients connect and listen for updates
+            socket.emit('loader:status-requested', {
+                timestamp: Date.now(),
+            });
+        });
+
         socket.on('disconnect', () => {
             if (socket.user) {
                 console.log(`User ${socket.user._id} disconnected`);
@@ -346,5 +416,46 @@ export const sendLoadingUpdate = (requestId, status, step = null, total = null) 
 
         io.to(requestId).emit('loading_update', payload);
         io.to(requestId).emit('server_load', serverLoad);
+    }
+};
+
+// Emit real-time loader progress to all connected clients
+export const broadcastLoaderUpdate = (loaderKey, progress, message, subMessage = null, status = 'loading') => {
+    if (io) {
+        io.emit('loader:progress', {
+            loaderKey,
+            progress: Math.min(progress, 100),
+            message,
+            subMessage,
+            status,
+            timestamp: Date.now(),
+        });
+    }
+};
+
+// Emit website-wide processing status to all connected clients
+export const broadcastWebsiteStatus = (isProcessing, message = null, progress = 0, status = null) => {
+    if (io) {
+        io.emit('website:status:update', {
+            isProcessing,
+            message: message || (isProcessing ? 'Website is processing...' : 'Website is ready'),
+            progress,
+            status: status || (isProcessing ? 'processing' : 'success'),
+            timestamp: Date.now(),
+        });
+    }
+};
+
+// Emit loader update to specific user
+export const emitLoaderUpdateToUser = (userId, loaderKey, progress, message, subMessage = null, status = 'loading') => {
+    if (io) {
+        io.to(userId.toString()).emit('loader:progress', {
+            loaderKey,
+            progress: Math.min(progress, 100),
+            message,
+            subMessage,
+            status,
+            timestamp: Date.now(),
+        });
     }
 };

@@ -30,7 +30,6 @@ const uploadLimiter = rateLimit({
     message: { status: 'error', message: 'Too many upload requests. Please try again in a minute.' },
     standardHeaders: true,
     legacyHeaders: false,
-    trustProxy: true,
     keyGenerator: ipKeyGenerator,
     skip: (req) => req.method === 'OPTIONS', // Don't count CORS preflight requests
 });

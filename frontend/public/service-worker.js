@@ -7,11 +7,46 @@ const CACHE_NAME = 'expense-tracker-v1';
 const CACHE_WHITELIST = [
   '/index.html',
   '/manifest.json',
-  '/favicon.ico',
   '/security.js',
   '/advanced-protection.js',
   '/zero-trust-client.js',
+  
 ];
+
+/**
+ * Initialize IndexedDB schema
+ * This ensures the database and object stores are created once during install
+ */
+async function initializeIndexedDB() {
+  return new Promise((resolve) => {
+    const request = indexedDB.open('ServiceWorkerDB', 2);
+
+    request.onerror = () => {
+      console.error('[SW] Failed to initialize IndexedDB:', request.error);
+      resolve(); // Don't block installation
+    };
+
+    request.onsuccess = () => {
+      const db = request.result;
+      console.log('[SW] IndexedDB initialized, version:', db.version);
+      db.close();
+      resolve();
+    };
+
+    request.onupgradeneeded = (event) => {
+      try {
+        const db = event.target.result;
+        console.log('[SW] Database upgrade to version', db.version);
+        if (!db.objectStoreNames.contains('etags')) {
+          db.createObjectStore('etags', { keyPath: 'url' });
+          console.log('[SW] Created "etags" object store');
+        }
+      } catch (error) {
+        console.error('[SW] Error during database upgrade:', error);
+      }
+    };
+  });
+}
 
 /**
  * Install event - cache static assets
@@ -20,10 +55,31 @@ self.addEventListener('install', (event) => {
   console.log('[SW] Installing service worker');
 
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Caching static assets');
-      return cache.addAll(CACHE_WHITELIST);
-    })
+    Promise.all([
+      // Initialize IndexedDB schema first
+      initializeIndexedDB(),
+      // Then cache static assets
+      caches.open(CACHE_NAME).then((cache) => {
+        console.log('[SW] Caching static assets');
+        // Cache each file individually with error handling
+        // This prevents one failed file from breaking the entire cache
+        return Promise.allSettled(
+          CACHE_WHITELIST.map((url) =>
+            cache.add(url).catch((error) => {
+              console.warn(`[SW] Failed to cache ${url}:`, error.message);
+              // Continue despite errors
+              return Promise.resolve();
+            })
+          )
+        ).then(() => {
+          console.log('[SW] Static assets caching completed');
+        });
+      }).catch((error) => {
+        console.error('[SW] Cache error:', error);
+        // Don't fail the entire install if caching fails
+        return Promise.resolve();
+      })
+    ])
   );
 
   // Force new version to become active
@@ -167,55 +223,125 @@ async function validateIntegrity(response, request) {
 }
 
 /**
- * Store ETag in IndexedDB
+ * Store ETag in IndexedDB with retry logic
  */
-async function storeETag(url, etag) {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('ServiceWorkerDB', 1);
+async function storeETag(url, etag, retries = 3) {
+  return new Promise((resolve) => {
+    const request = indexedDB.open('ServiceWorkerDB', 2);
 
-    request.onerror = () => reject(request.error);
+    request.onerror = () => {
+      console.warn('[SW] Failed to open IndexedDB for storeETag:', request.error);
+      resolve(); // Don't fail, just skip caching
+    };
 
     request.onsuccess = () => {
       const db = request.result;
-      const tx = db.transaction('etags', 'readwrite');
-      const store = tx.objectStore('etags');
+      try {
+        // Check if object store exists
+        if (!db.objectStoreNames.contains('etags')) {
+          console.warn('[SW] Object store "etags" not found, retrying...');
+          db.close();
+          // Retry after a short delay
+          if (retries > 0) {
+            setTimeout(() => storeETag(url, etag, retries - 1), 100);
+          }
+          resolve();
+          return;
+        }
 
-      store.put({ url, etag, timestamp: Date.now() });
-      tx.oncomplete = () => resolve();
+        const tx = db.transaction('etags', 'readwrite');
+        const store = tx.objectStore('etags');
+
+        store.put({ url, etag, timestamp: Date.now() });
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onerror = () => {
+          console.warn('[SW] Transaction error in storeETag:', tx.error);
+          db.close();
+          resolve();
+        };
+      } catch (error) {
+        console.warn('[SW] Error in storeETag:', error);
+        db.close();
+        resolve();
+      }
     };
 
     request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      if (!db.objectStoreNames.contains('etags')) {
-        db.createObjectStore('etags', { keyPath: 'url' });
+      try {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains('etags')) {
+          db.createObjectStore('etags', { keyPath: 'url' });
+          console.log('[SW] Created "etags" object store in storeETag');
+        }
+      } catch (error) {
+        console.warn('[SW] Error creating object store in storeETag:', error);
       }
     };
   });
 }
 
 /**
- * Get stored ETag from IndexedDB
+ * Get stored ETag from IndexedDB with retry logic
  */
-async function getStoredETag(url) {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('ServiceWorkerDB', 1);
+async function getStoredETag(url, retries = 3) {
+  return new Promise((resolve) => {
+    const request = indexedDB.open('ServiceWorkerDB', 2);
 
-    request.onerror = () => reject(request.error);
+    request.onerror = () => {
+      console.warn('[SW] Failed to open IndexedDB for getStoredETag:', request.error);
+      resolve(null); // Don't fail, just return null
+    };
 
     request.onsuccess = () => {
       const db = request.result;
-      const tx = db.transaction('etags', 'readonly');
-      const store = tx.objectStore('etags');
+      try {
+        // Check if object store exists
+        if (!db.objectStoreNames.contains('etags')) {
+          console.warn('[SW] Object store "etags" not found in getStoredETag, retrying...');
+          db.close();
+          // Retry after a short delay
+          if (retries > 0) {
+            setTimeout(() => getStoredETag(url, retries - 1), 100);
+          }
+          resolve(null);
+          return;
+        }
 
-      const getRequest = store.get(url);
+        const tx = db.transaction('etags', 'readonly');
+        const store = tx.objectStore('etags');
 
-      getRequest.onsuccess = () => {
-        resolve(getRequest.result?.etag || null);
-      };
+        const getRequest = store.get(url);
+
+        getRequest.onsuccess = () => {
+          db.close();
+          resolve(getRequest.result?.etag || null);
+        };
+
+        tx.onerror = () => {
+          console.warn('[SW] Transaction error in getStoredETag:', tx.error);
+          db.close();
+          resolve(null);
+        };
+      } catch (error) {
+        console.warn('[SW] Error in getStoredETag:', error);
+        db.close();
+        resolve(null);
+      }
     };
 
-    request.onupgradeneeded = () => {
-      resolve(null); // First time
+    request.onupgradeneeded = (event) => {
+      try {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains('etags')) {
+          db.createObjectStore('etags', { keyPath: 'url' });
+          console.log('[SW] Created "etags" object store in getStoredETag');
+        }
+      } catch (error) {
+        console.warn('[SW] Error creating object store in getStoredETag:', error);
+      }
     };
   });
 }

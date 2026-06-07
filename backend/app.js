@@ -78,45 +78,60 @@ app.use(ipBlacklistMiddleware); // Instantly drop known malicious IPs
 app.use(ipSpoofingDetectionMiddleware); // Detect X-Forwarded-For manipulation attempts
 
 
-// 2. Helmet security headers
+// 2. Helmet security headers - build CSP directives dynamically
+const cspDirectives = {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'"],
+    styleSrc: ["'self'", "https://fonts.googleapis.com"],
+    fontSrc: ["'self'", "https://fonts.gstatic.com"],
+    imgSrc: ["'self'", "data:", "https:"],
+    mediaSrc: ["'self'"],
+    frameAncestors: ["'none'"],
+    baseUri: ["'self'"],
+    formAction: ["'self'"],
+    objectSrc: ["'none'"],
+    // Require HTTPS in production, upgrade insecure requests
+    ...(config.env === 'production' && { upgradeInsecureRequests: [] }),
+    connectSrc: (() => {
+        const connectSources = [
+            "'self'",
+            "https://api.pwnedpasswords.com",
+            "https://fonts.gstatic.com",
+        ];
+        
+        // Add frontend and API URLs for production
+        if (config.allowedOrigins && Array.isArray(config.allowedOrigins)) {
+            const validOrigins = config.allowedOrigins.filter(origin => 
+                origin && typeof origin === 'string' && /^https?:\/\//.test(origin)
+            );
+            connectSources.push(...validOrigins);
+        }
+        
+        // Handle viteApiUrl - could be comma-separated
+        if (config.viteApiUrl && typeof config.viteApiUrl === 'string') {
+            const apiUrls = config.viteApiUrl
+                .split(',')
+                .map(url => url.trim())
+                .filter(url => url && /^https?:\/\//.test(url));
+            connectSources.push(...apiUrls);
+        }
+        
+        // Add WebSocket support for Socket.io in development only
+        if (config.env !== 'production') {
+            connectSources.push("ws://localhost:5000");
+        }
+        
+        return connectSources;
+    })(),
+    // Allow frames from same origin
+    frameSrc: ["'self'"],
+    // Sandbox permissions for iframes if used
+    sandbox: ["allow-same-origin", "allow-scripts"]
+};
+
 app.use(helmet({
     contentSecurityPolicy: {
-        directives: {
-            // Restrict where resources can be loaded from
-            defaultSrc: ["'self'"],
-            scriptSrc: ["'self'"], // No unsafe-inline or external scripts
-            styleSrc: ["'self'", "https://fonts.googleapis.com"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com"],
-            imgSrc: ["'self'", "data:", "https:"],
-
-            // Prevent framing in iframes (clickjacking protection)
-            frameAncestors: ["'none'"],
-
-            // Restrict base URL (prevents base tag injection)
-            baseUri: ["'self'"],
-
-            // Form submission endpoints
-            formAction: ["'self'"],
-
-            // Prevent plugin embedding
-            objectSrc: ["'none'"],
-
-            // Only allow HTTPS in production
-            upgradeInsecureRequests: config.env === 'production' ? [] : [],
-
-            // Use wss:// and https:// in production; ws:// only in development
-            connectSrc: [
-                "'self'",
-                ...config.allowedOrigins,
-                config.viteApiUrl,
-                // Password breach check (Have I Been Pwned)
-                'https://api.pwnedpasswords.com',
-                // WebFont CDN
-                'https://fonts.gstatic.com',
-                // Socket.io handshake
-                ...(config.env === 'production' ? [] : ['ws://localhost:5000'])
-            ],
-        },
+        directives: cspDirectives,
     },
     // Additional security headers
     crossOriginEmbedderPolicy: true,
@@ -126,8 +141,18 @@ app.use(helmet({
     hsts: {
         maxAge: 31536000, // 1 year
         includeSubDomains: true,
-        preload: true,
+        preload: config.env === 'production' ? true : false,
     },
+    // X-Frame-Options - prevent clickjacking
+    frameguard: {
+        action: 'deny'
+    },
+    // X-Content-Type-Options - prevent MIME type sniffing
+    noSniff: true,
+    // X-XSS-Protection - enable browser XSS filtering (legacy, but good to have)
+    xssFilter: true,
+    // Permissions Policy / Feature Policy
+    permittedCrossDomainPolicies: false,
 }));
 const allowedOrigins=[
     'http://localhost:5173',
@@ -184,7 +209,6 @@ const limiter = rateLimit({
     message: 'Too many requests from this IP, please try again in 15 minutes!',
     standardHeaders: true,
     legacyHeaders: false,
-    trustProxy: true,
     keyGenerator: ipKeyGenerator,
     skip: (req) => req.method === 'OPTIONS', // Don't count CORS preflight requests
 });
@@ -197,7 +221,6 @@ const mfaLimiter = rateLimit({
     message: 'Too many MFA attempts. Please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
-    trustProxy: true,
     keyGenerator: ipKeyGenerator,
 });
 
@@ -208,7 +231,6 @@ const loginLimiter = rateLimit({
     message: 'Too many login attempts. Please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
-    trustProxy: true,
     keyGenerator: ipKeyGenerator,
 });
 
@@ -220,7 +242,6 @@ const csrfLimiter = rateLimit({
     message: 'Too many CSRF token requests. Please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
-    trustProxy: true,
     keyGenerator: ipKeyGenerator,
     skip: (req) => {
         //  Check if token is already in meta tag from initial page load
